@@ -1,0 +1,32 @@
+{
+  "background": false,
+  "behavior": "application",
+  "version": "0.1",
+  "title": "Dropbox",
+  "name": "Dropbox",
+  "identifier": "com.koding.apps.dropbox",
+  "path": "~/Applications/Dropbox.kdapp",
+  "homepage": "gokmen.lvh.me/dropbox",
+  "repository": "git://github.com/gokmen/dropbox.kdapp.git",
+  "description": "Dropbox : a Koding application created with the blank template.",
+  "category": "web-app",
+  "source": {
+    "blocks": {
+      "app": {
+        "files": [
+          "./index.coffee"
+        ]
+      }
+    },
+    "stylesheets": [
+      "./resources/style.css"
+    ]
+  },
+  "options": {
+    "type": "tab"
+  },
+  "icns": {
+    "128": "./resources/icon.128.png"
+  },
+  "fileTypes": []
+}

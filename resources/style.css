@@ -1,0 +1,84 @@
+.dropbox.main-view {
+  background: white;
+}
+
+.dropbox .welcome-view {
+
+  background: #eee;
+
+  height: auto;
+  width: auto;
+  max-width: 300px;
+
+  margin: 50px auto;
+
+  border: 1px solid #ccc;
+  border-radius: 4px;
+
+  padding:10px;
+
+  text-align:center;
+
+}
+
+.dropbox .dropbox-logo {
+  background: url("http://gokmen.kd.io/dropbox.png");
+  background-size: 400px;
+  background-repeat: no-repeat;
+  margin: 0 auto;
+  width: 400px;
+  height: 150px;
+}
+
+.dropbox .container {
+  width:500px;
+  margin: 60px auto;
+  height: auto;
+  border:1px solid #eee;
+  text-align:center;
+  padding:20px;
+}
+
+.app-logger {
+  width: 100%;
+  height: auto;
+  position: absolute;
+  bottom: 20px;
+  border-top:1px solid #eee;
+}
+
+.app-logger > .listview-wrapper {
+    -moz-transition: .6s;
+    -ms-transition: .6s;
+    -o-transition: .6s;
+    -webkit-transition: .6s;
+    transition: .6s;
+    height: 0;
+}
+
+.app-logger > .listview-wrapper.in {
+  height: 300px;
+}
+
+.app-logger .app-log-item {
+  border-top: 1px solid #eee;
+  box-sizing:border-box;
+  padding:4px;
+  font-family: monospace;
+}
+
+.app-logger .app-log-item.log {
+  background: white;
+}
+
+.app-logger .app-log-item.info {
+  background: #daddea;
+}
+
+.app-logger .app-log-item.warn {
+  background: #f4f2ea;
+}
+
+.app-logger .app-log-item.error {
+  background: #f0e2ec;
+}
