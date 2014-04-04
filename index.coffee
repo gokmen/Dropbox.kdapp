@@ -8,7 +8,7 @@ class AppLogItem extends KDListItemView
   viewAppended: JView::viewAppended
   
   pistachio:->
-    "<span>{{#(message)}}</span>"
+    "<span>#{(new Date).format('HH:MM:ss')} : {{#(message)}}</span>"
   
 class AppLogger extends KDView
   

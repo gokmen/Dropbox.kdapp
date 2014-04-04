@@ -44,16 +44,17 @@
   height: auto;
   position: absolute;
   bottom: 20px;
+  background: white;
   border-top:1px solid #eee;
 }
 
 .app-logger > .listview-wrapper {
-    -moz-transition: .6s;
-    -ms-transition: .6s;
-    -o-transition: .6s;
-    -webkit-transition: .6s;
-    transition: .6s;
-    height: 0;
+  -moz-transition: .6s;
+  -ms-transition: .6s;
+  -o-transition: .6s;
+  -webkit-transition: .6s;
+  transition: .6s;
+  height: 0;
 }
 
 .app-logger > .listview-wrapper.in {
