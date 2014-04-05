@@ -5,25 +5,24 @@ class VMHelper extends KDController
   
   constructor:(options = {}, data)->
     super
-    
-    @fetchVMList()
-  
-  run:(command, callback)->
-    (KD.getSingleton 'kiteController')
-      .getKite "#{ type }-#{ region }", hostnameAlias, type
-
-  fetchVMList:(callback = ->)->
-    
-    if @_vms
-      return callback null, @_vms
-    
+      
     {JVM} = KD.remote.api
-    JVM.fetchVms (err, vms = [])=>
-      if err
-        callback err 
-      else
-        @_vms = vms
-        callback null, vms
+    JVM.fetchVms (err, vms)=>
+
+      console.warn err  if err
+      return unless vms
+      
+      @_vms = vms        
+      @_kites = {}
+      
+      kiteController = KD.getSingleton 'kiteController'
+
+      for vm in vms
+        alias = vm.hostnameAlias
+        @_kites[alias] = kiteController
+          .getKite "os-#{ vm.region }", alias, 'os'
+
+      @emit 'ready'
 
 # --- Koding Backend ------------------------ 8< ------    
 
@@ -35,9 +34,12 @@ class VMHelper extends KDController
 # --- Dropbox Backend ----------------------- 8< ------    
 
 class DropboxClientController extends KDController
- 
+  
   constructor:(options = {}, data)->
     super options, data
+    
+    @vmHelper = new VMHelper
+    @vmHelper.ready @lazyBound 'emit', 'ready'
     
 class DropboxInstaller extends KDView
   
@@ -66,28 +68,28 @@ class DropboxMainView extends KDView
     options.cssClass = 'dropbox main-view'
     super options, data
 
+    @registerSingleton "dropboxController", 
+      (new DropboxClientController), yes
+
   viewAppended:->
     
     @addSubView container = new KDView
       cssClass : 'container'
   
     @addSubView @logger = new AppLogger
-    
     @logger.info "Logger initialized."
-    
-    a = =>
-      b = =>
-        @logger.warn "Yihahahhaha"
-      b()
-    
-    a()
-      
+          
     container.addSubView new KDView
       cssClass : "dropbox-logo"
       
     container.addSubView loader = new KDLoaderView
       showLoader : no
       size       : width : 40
+    
+    dbc = KD.singletons.dropboxController
+    dbc.ready =>
+      @logger.log "VMS are ready:", dbc.vmHelper._vms, "Kites are ready:", dbc.vmHelper._kites
+
 
 class DropboxController extends AppController
 
@@ -119,7 +121,16 @@ class AppLogItem extends KDListItemView
   viewAppended: JView::viewAppended
   
   pistachio:->
-    "<span>#{(new Date).format('HH:MM:ss')} : {{#(message)}}</span>"
+    
+    {message} = @getData()
+
+    content = ""
+    for part in message
+      if (typeof part) is 'object'
+        part = "<pre>#{JSON.stringify part, null, 2}</pre>"
+      content += "#{part} "
+  
+    "<span>#{(new Date).format('HH:MM:ss')} : #{content}</span>"
   
 class AppLogger extends KDView
   
@@ -135,14 +146,16 @@ class AppLogger extends KDView
       scrollView   : yes
     
     ['log', 'warn', 'info', 'error'].forEach (mtype)=>
-      this[mtype] = (message)=>
-        @list.addItem {message}, {type:mtype}
+      this[mtype] = (rest...) =>
+        @list.addItem {message: rest}, {type:mtype}
+        console[mtype] rest
         
   viewAppended:->
     
     view = @list.getView()
+    view.toggleClass 'in'
     @addSubView new KDHeaderView
-      title : "Logs:"
+      title : "Logs"
       type  : "small"
       click : -> view.toggleClass 'in'
         

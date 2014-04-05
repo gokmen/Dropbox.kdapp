@@ -2,25 +2,6 @@
   background: white;
 }
 
-.dropbox .welcome-view {
-
-  background: #eee;
-
-  height: auto;
-  width: auto;
-  max-width: 300px;
-
-  margin: 50px auto;
-
-  border: 1px solid #ccc;
-  border-radius: 4px;
-
-  padding:10px;
-
-  text-align:center;
-
-}
-
 .dropbox .dropbox-logo {
   background: url("http://gokmen.kd.io/dropbox.png");
   background-size: 400px;
@@ -68,8 +49,12 @@
   font-family: monospace;
 }
 
+.app-logger .app-log-item:hover {
+  background: white !important;
+}
+
 .app-logger .app-log-item.log {
-  background: white;
+  background: rgba(0,0,0,.05);
 }
 
 .app-logger .app-log-item.info {
