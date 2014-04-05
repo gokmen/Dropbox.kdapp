@@ -1,47 +1,49 @@
 
 # --- Koding Backend ------------------------ 8< ------    
 
-class VMHelper extends KDController
+class KiteHelper extends KDController
   
   constructor:(options = {}, data)->
     super
-      
-    {JVM} = KD.remote.api
-    JVM.fetchVms (err, vms)=>
-
-      console.warn err  if err
-      return unless vms
-      
-      @_vms = vms        
-      @_kites = {}
-      
-      kiteController = KD.getSingleton 'kiteController'
-
-      for vm in vms
-        alias = vm.hostnameAlias
-        @_kites[alias] = kiteController
-          .getKite "os-#{ vm.region }", alias, 'os'
-
-      @emit 'ready'
   
-  run:(options)->
+  getReady:->
+  
+    new Promise (resolve, reject) =>
     
-    if "string" is typeof options
-      cmd      = options
-      options  = {}
-    else
-      {vm,cmd} = ptions
- 
-    vm or= @_vms.first.hostnameAlias
+      {JVM} = KD.remote.api
+      JVM.fetchVms (err, vms)=>
 
-    unless kite = @_kites[vm]
-      return Promise.reject {
-        message: "No such kite for #{vm}"
-      }
+        console.warn err  if err
+        return unless vms
+      
+        @_vms = vms        
+        @_kites = {}
+      
+        kiteController = KD.getSingleton 'kiteController'
+
+        for vm in vms
+          alias = vm.hostnameAlias
+          @_kites[alias] = kiteController
+            .getKite "os-#{ vm.region }", alias, 'os'
+
+        @emit 'ready'
+        resolve()
+  
+  getKite:->
     
-    kite.vmOn().then()
-    kite.exec(cmd)
+    new Promise (resolve, reject)=>
 
+      @getReady().then =>
+      
+        vm = @_vm or @_vms.first.hostnameAlias
+
+        unless kite = @_kites[vm]
+          return reject {
+            message: "No such kite for #{vm}"
+          }
+    
+        kite.vmOn().then -> resolve kite
+    
 # --- Koding Backend ------------------------ 8< ------    
 
 
@@ -53,16 +55,47 @@ class VMHelper extends KDController
 
 class DropboxClientController extends KDController
   
+  DROPBOX = "/tmp/_dropbox.py"
+  HELPER  = "python #{DROPBOX}"
+  
   constructor:(options = {}, data)->
     super options, data
     
-    @vmHelper = new VMHelper
-    @vmHelper.ready @lazyBound 'emit', 'ready'
+    @kiteHelper = new KiteHelper
+    @kiteHelper.ready @lazyBound 'emit', 'ready'
     
     @registerSingleton "dropboxController", this, yes
+  
+  stop: (cb)->
     
-  checkInstallation:->
-    # pass
+    @kiteHelper.getKite()
+    .then (kite)->
+      kite.exec("#{HELPER} start")
+      .then (result)->
+        cb result.stdout
+    .catch (err)->
+      cb "failed"
+
+  isInstalled: (cb)->
+    
+    @kiteHelper.getKite()
+    .then (kite)->
+      kite.exec("#{HELPER} installed")
+      .then (result)->
+        cb result.exitStatus is 1
+    .catch (err)->
+      cb no
+
+  isRunning: (cb) ->
+  
+    @kiteHelper.getKite()
+    .then (kite)->
+      kite.exec("#{HELPER} running")
+      .then (result)->
+        cb result.exitStatus is 1
+    .catch (err)->
+      cb no
+
 
 # --- Dropbox Backend ----------------------- 8< ------    
 
@@ -111,18 +144,14 @@ class DropboxMainView extends KDView
       size       : width : 40
     
     dbc = KD.singletons.dropboxController
-    dbc.ready =>
-      @logger.info "Testing ls..."
-      
-      (dbc.vmHelper.run "ls")
-  
-      .then (result)=>
-        @logger.log "OUT:", result
-      
-      .catch (err)=>
-        @logger.error "Failed:", err
-      
+    dbc.isInstalled (state)=>
+      @logger.info "Installed, ", state
+    dbc.isRunning (state)=>
+      @logger.info "Running, ", state
+    dbc.stop (state)=>
+      @logger.info "Stop: ", state
 
+      
 
 class DropboxController extends AppController
 
