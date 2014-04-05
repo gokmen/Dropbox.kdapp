@@ -30,11 +30,8 @@
 }
 
 .app-logger > .listview-wrapper {
-  -moz-transition: .6s;
-  -ms-transition: .6s;
-  -o-transition: .6s;
-  -webkit-transition: .6s;
-  transition: .6s;
+  -webkit-transition: height .6s;
+  transition: height .6s;
   height: 0;
 }
 
@@ -43,18 +40,19 @@
 }
 
 .app-logger .app-log-item {
-  border-top: 1px solid #eee;
+  border-top: 1px solid #ddd;
   box-sizing:border-box;
   padding:4px;
   font-family: monospace;
+  overflow:auto;
 }
 
 .app-logger .app-log-item:hover {
-  background: white !important;
+  background: rgba(0,0,0,.01) !important;
 }
 
 .app-logger .app-log-item.log {
-  background: rgba(0,0,0,.05);
+  background: white;
 }
 
 .app-logger .app-log-item.info {

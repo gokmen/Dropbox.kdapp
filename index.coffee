@@ -23,6 +23,24 @@ class VMHelper extends KDController
           .getKite "os-#{ vm.region }", alias, 'os'
 
       @emit 'ready'
+  
+  run:(options)->
+    
+    if "string" is typeof options
+      cmd      = options
+      options  = {}
+    else
+      {vm,cmd} = ptions
+ 
+    vm or= @_vms.first.hostnameAlias
+
+    unless kite = @_kites[vm]
+      return Promise.reject {
+        message: "No such kite for #{vm}"
+      }
+    
+    kite.vmOn().then()
+    kite.exec(cmd)
 
 # --- Koding Backend ------------------------ 8< ------    
 
@@ -89,12 +107,21 @@ class DropboxMainView extends KDView
       cssClass : "dropbox-logo"
       
     container.addSubView @loader = new KDLoaderView
-      showLoader : yes
+      showLoader : no
       size       : width : 40
     
     dbc = KD.singletons.dropboxController
     dbc.ready =>
-      @logger.log "VMS are ready:", dbc.vmHelper._vms, "Kites are ready:", dbc.vmHelper._kites
+      @logger.info "Testing ls..."
+      
+      (dbc.vmHelper.run "ls")
+  
+      .then (result)=>
+        @logger.log "OUT:", result
+      
+      .catch (err)=>
+        @logger.error "Failed:", err
+      
 
 
 class DropboxController extends AppController
