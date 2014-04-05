@@ -41,6 +41,20 @@ class DropboxClientController extends KDController
     @vmHelper = new VMHelper
     @vmHelper.ready @lazyBound 'emit', 'ready'
     
+    @registerSingleton "dropboxController", this, yes
+    
+  checkInstallation:->
+    # pass
+
+# --- Dropbox Backend ----------------------- 8< ------    
+
+
+
+
+
+
+# --- Dropbox UI ---------------------------- 8< ------    
+
 class DropboxInstaller extends KDView
   
   constructor:(options = {}, data)->
@@ -52,15 +66,6 @@ class DropboxInstaller extends KDView
       title : "Install Dropbox"
       cssClass : "solid green"
       callback : -> alert "install"
-
-# --- Dropbox Backend ----------------------- 8< ------    
-
-
-
-
-
-
-# --- Dropbox UI ---------------------------- 8< ------    
       
 class DropboxMainView extends KDView
 
@@ -68,8 +73,9 @@ class DropboxMainView extends KDView
     options.cssClass = 'dropbox main-view'
     super options, data
 
-    @registerSingleton "dropboxController", 
-      (new DropboxClientController), yes
+    # Comment-out this before deploy ~ GG
+    # unless KD.singletons.dropboxController
+    new DropboxClientController
 
   viewAppended:->
     
@@ -82,8 +88,8 @@ class DropboxMainView extends KDView
     container.addSubView new KDView
       cssClass : "dropbox-logo"
       
-    container.addSubView loader = new KDLoaderView
-      showLoader : no
+    container.addSubView @loader = new KDLoaderView
+      showLoader : yes
       size       : width : 40
     
     dbc = KD.singletons.dropboxController
