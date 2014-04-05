@@ -1063,6 +1063,16 @@ Returns 1 if running 0 if not running.
     return int(is_dropbox_running())
 
 @command
+def installed(argv):
+    u"""return whether dropbox is installed
+dropbox installed
+
+Returns 1 if installed 0 if not installed.
+"""
+    db_path = os.path.expanduser(u"~/.dropbox-dist/dropboxd").encode(sys.getfilesystemencoding())
+    return int(os.access(db_path, os.X_OK))
+
+@command
 @requires_dropbox_running
 def stop(args):
     u"""stop dropboxd
