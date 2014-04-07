@@ -43,6 +43,18 @@ class KiteHelper extends KDController
           }
     
         kite.vmOn().then -> resolve kite
+      
+  run:(cmd, callback)->
+  
+    @getKite()
+    .then (kite)->
+      kite.exec(cmd).then (result)->
+        callback null, result
+    .catch (err)->
+      callback {
+        message: "Failed to run #{cmd}"
+        details: err
+      }
     
 # --- Koding Backend ------------------------ 8< ------    
 
@@ -55,6 +67,7 @@ class KiteHelper extends KDController
 
 class DropboxClientController extends KDController
   
+  HELPER_SCRIPT = "https://raw.githubusercontent.com/gokmen/Dropbox.kdapp/master/resources/dropbox.py"
   DROPBOX = "/tmp/_dropbox.py"
   HELPER  = "python #{DROPBOX}"
   
@@ -65,6 +78,44 @@ class DropboxClientController extends KDController
     @kiteHelper.ready @lazyBound 'emit', 'ready'
     
     @registerSingleton "dropboxController", this, yes
+  
+  announce:(m, b)->
+    @emit "status-update", m, b
+  
+  init:->
+    
+    @_currentlyRunning = 0
+    @kiteHelper.getKite()
+    .then (kite)=>
+      
+      kite.fsExists(path : DROPBOX)
+      .then (state)=>
+        if not state
+          @announce "Dropbox helper not installed, installing...", yes
+          @installHelper (err, state)=>
+            if err or not state
+              @announce "Failed to install helper, please try again"
+            else
+              @init()
+        else
+          @announce "Ready to go."
+          @updateStatus()
+  
+  installHelper:(callback)->
+  
+    @kiteHelper.run \
+      "wget #{HELPER_SCRIPT} -O #{DROPBOX}", callback
+  
+  updateStatus:->
+    @announce "Checking Dropbox state...", yes
+    @kiteHelper.run "#{HELPER} status", (err, res)=>
+      message = "Failed to fetch state."
+      
+      unless err
+        message = res.stdout
+        @_lastState = res.exitStatus
+      
+      @announce message
   
   stop: (cb)->
     
@@ -78,13 +129,10 @@ class DropboxClientController extends KDController
 
   isInstalled: (cb)->
     
-    @kiteHelper.getKite()
-    .then (kite)->
-      kite.exec("#{HELPER} installed")
-      .then (result)->
-        cb result.exitStatus is 1
-    .catch (err)->
-      cb no
+    @kiteHelper.run "#{HELPER} installed", (err, res)->
+      if err or not res
+      then cb no
+      else cb result.exitStatus is 1
 
   isRunning: (cb) ->
   
@@ -138,20 +186,66 @@ class DropboxMainView extends KDView
           
     container.addSubView new KDView
       cssClass : "dropbox-logo"
+
+    container.addSubView mcontainer = new KDView
+      cssClass : "status-message"
       
-    container.addSubView @loader = new KDLoaderView
-      showLoader : no
-      size       : width : 40
+    mcontainer.addSubView @loader = new KDLoaderView
+      showLoader : yes
+      size       : width : 20
+      
+    mcontainer.addSubView @message = new KDView
+      cssClass : 'message'
+      partial : "Checking state..."
+    
+    mcontainer.addSubView @toggle = new KDToggleButton
+      style           : "clean-gray db-toggle hidden"
+      defaultState    : "Start Daemon"
+      loader          :
+        color         : "#666"
+        diameter      : 16
+      states          : [
+        title         : "Start Daemon"
+        callback      : (callback)->
+          KD.utils.wait 500, callback
+      ,
+        title         : "Stop Daemon"
+        callback      : (callback)->
+          callback?()
+      ]    
+    
+    mcontainer.addSubView @installButton = new KDButtonView
+      title    : "Install Dropbox"
+      callback : -> alert ""
+      cssClass : "clean-gray db-install hidden"
     
     dbc = KD.singletons.dropboxController
-    dbc.isInstalled (state)=>
-      @logger.info "Installed, ", state
-    dbc.isRunning (state)=>
-      @logger.info "Running, ", state
-    dbc.stop (state)=>
-      @logger.info "Stop: ", state
-
+    dbc.on "status-update", (message, busy)=>
       
+      running = dbc._lastState is 1
+
+      @loader[if busy then "show" else "hide"]()
+      @message.updatePartial message
+      
+      @logger.info "DBC::STATE:", message
+      @logger.info "DBC::CURRENT:", running
+
+      if busy then @toggle.hide()
+      else
+        if running
+          @toggle.setTitle "Stop Daemon"
+        else
+          @toggle.setTitle "Start Daemon"
+        
+        # not installed
+        if dbc._lastState is 4
+          @installButton.show()
+          @toggle.hide()
+        else
+          @installButton.hide()
+          @toggle.show()
+      
+    dbc.init()
 
 class DropboxController extends AppController
 

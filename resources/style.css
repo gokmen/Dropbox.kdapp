@@ -20,6 +20,35 @@
   padding:20px;
 }
 
+.dropbox .status-message {
+  border-bottom: 1px solid #eee;
+  border-radius: 5px;
+  width:100%;
+}
+.dropbox .status-message .kdloader {
+  float:left;
+  top: 5px;
+}
+
+.dropbox .status-message .message {
+  float:left;
+  width:auto;
+  line-height:20px;
+  margin: 5px
+}
+
+.dropbox .status-message .db-install,
+.dropbox .status-message .db-toggle {
+  position: absolute;
+  right:5px;
+}
+
+.dropbox .status-message .db-toggle > .kdloader {
+  margin-top: 0 !important;
+  margin-left: 0 !important;
+}
+
+
 .app-logger {
   width: 100%;
   height: auto;
