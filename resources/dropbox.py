@@ -714,7 +714,10 @@ def alias(name):
 
 def requires_dropbox_running(meth):
     def newmeth(*n, **kw):
-        if is_dropbox_running():
+    	if installed() != 1:
+            console_print(u"Dropbox is not installed!")
+	    return 4
+        elif is_dropbox_running():
             return meth(*n, **kw)
         else:
             console_print(u"Dropbox isn't running!")
@@ -1042,6 +1045,7 @@ Prints out the current status of the Dropbox daemon.
                             if len(status) > 0:
                                 link = "".join(status).rstrip("\n")
                                 console_print(u"%s" % link)
+		return 1
             except KeyError:
                 console_print(u"Couldn't get status: daemon isn't responding")
             except DropboxCommand.CommandError, e:
@@ -1052,6 +1056,7 @@ Prints out the current status of the Dropbox daemon.
                 console_print(u"Dropbox daemon stopped.")
     except DropboxCommand.CouldntConnectError, e:
         console_print(u"Dropbox isn't running!")
+    return 0
 
 @command
 def running(argv):
@@ -1063,7 +1068,7 @@ Returns 1 if running 0 if not running.
     return int(is_dropbox_running())
 
 @command
-def installed(argv):
+def installed(argv = ()):
     u"""return whether dropbox is installed
 dropbox installed
 
