@@ -41,7 +41,8 @@ class KiteHelper extends KDController
           return reject {
             message: "No such kite for #{vm}"
           }
-    
+        
+        kite.options.timeout = 60 * 1000
         kite.vmOn().then -> resolve kite
       
   run:(cmd, callback)->
@@ -91,7 +92,7 @@ class DropboxClientController extends KDController
       kite.fsExists(path : DROPBOX)
       .then (state)=>
         if not state
-          @announce "Dropbox helper not installed, installing...", yes
+          @announce "Dropbox helper is not available, fixing...", yes
           @installHelper (err, state)=>
             if err or not state
               @announce "Failed to install helper, please try again"
@@ -101,6 +102,14 @@ class DropboxClientController extends KDController
           @announce "Ready to go."
           @updateStatus()
   
+  install:(callback)->
+
+    @announce "Installing Dropbox daemon...", yes
+    @kiteHelper.run "#{HELPER} install", (err, res)->
+      if err or not res
+      then callback no
+      else callback res.exitStatus is 1 
+
   installHelper:(callback)->
   
     @kiteHelper.run \
@@ -189,6 +198,8 @@ class DropboxMainView extends KDView
 
     container.addSubView mcontainer = new KDView
       cssClass : "status-message"
+
+    dbc = KD.singletons.dropboxController
       
     mcontainer.addSubView @loader = new KDLoaderView
       showLoader : yes
@@ -216,10 +227,9 @@ class DropboxMainView extends KDView
     
     mcontainer.addSubView @installButton = new KDButtonView
       title    : "Install Dropbox"
-      callback : -> alert ""
+      callback : -> dbc.install -> log arguments
       cssClass : "clean-gray db-install hidden"
     
-    dbc = KD.singletons.dropboxController
     dbc.on "status-update", (message, busy)=>
       
       running = dbc._lastState is 1
