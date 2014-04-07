@@ -1002,6 +1002,26 @@ Any specified path must be within Dropbox.
         return
 
 @command
+def install(argv):
+    u"""install dropboxd
+dropbox install
+
+Installs the dropbox daemon, dropboxd. If dropboxd is already installed, this will do nothing.
+"""
+    if installed() != 1:
+        # install dropbox!!!
+        try:
+            download()
+        except:
+            traceback.print_exc()
+	else:
+            console_print(u"Done!")
+	    return 1
+    else:
+	console_print(u"Already installed, skipping.")
+	return 1
+
+@command
 def start(argv):
     u"""start dropboxd
 dropbox start [-i]
