@@ -1,7 +1,7 @@
-/* Compiled by kdc on Tue Apr 08 2014 01:05:02 GMT+0000 (UTC) */
+/* Compiled by kdc on Tue Apr 08 2014 21:06:08 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
-/* BLOCK STARTS: /home/gokmen/Applications/Dropbox.kdapp/index.coffee */
+/* BLOCK STARTS: index.coffee */
 var AppLogItem, AppLogger, DropboxClientController, DropboxController, DropboxInstaller, DropboxMainView, KiteHelper,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -129,16 +129,24 @@ DropboxClientController = (function(_super) {
             }
           });
         } else {
-          _this.announce("Ready to go.");
           return _this.updateStatus();
         }
       });
     });
   };
 
-  DropboxClientController.prototype.install = function() {
+  DropboxClientController.prototype.install = function(callback) {
+    var _this = this;
     this.announce("Installing Dropbox daemon...", true);
-    return this.kiteHelper.run("" + HELPER + " install", this.bound('updateStatus'));
+    return this.kiteHelper.run("" + HELPER + " install", function(err, res) {
+      var message;
+      message = "Failed to install Dropbox, try again";
+      if (!err) {
+        message = "Dropbox installed successfully, you can start the daemon now";
+        _this._lastState = 0;
+      }
+      return _this.announce(message);
+    });
   };
 
   DropboxClientController.prototype.start = function() {
@@ -148,7 +156,7 @@ DropboxClientController = (function(_super) {
 
   DropboxClientController.prototype.stop = function() {
     this.announce("Stoping Dropbox daemon...", true);
-    return this.kiteHelper.run("" + HELPER + " stop", 10000, this.bound('updateStatus'));
+    return this.kiteHelper.run("" + HELPER + " stop", 5000, this.bound('updateStatus'));
   };
 
   DropboxClientController.prototype.getAuthLink = function(callback) {
@@ -169,7 +177,11 @@ DropboxClientController = (function(_super) {
 
   DropboxClientController.prototype.updateStatus = function() {
     var _this = this;
-    this.announce("Checking Dropbox state...", true);
+    if (this._locked) {
+      return;
+    }
+    this._locked = true;
+    this.announce(null, true);
     return this.kiteHelper.run("" + HELPER + " status", function(err, res) {
       var message;
       message = "Failed to fetch state.";
@@ -177,7 +189,8 @@ DropboxClientController = (function(_super) {
         message = res.stdout;
         _this._lastState = res.exitStatus;
       }
-      return _this.announce(message);
+      _this.announce(message);
+      return _this._locked = false;
     });
   };
 
@@ -270,26 +283,26 @@ DropboxMainView = (function(_super) {
         }
       }
     }));
-    mcontainer.addSubView(this.toggle = new KDToggleButton({
-      style: "clean-gray db-toggle hidden",
-      defaultState: "Start Daemon",
+    container.addSubView(this.toggle = new KDToggleButton({
+      style: "solid green db-toggle hidden",
+      defaultState: "Start Dropbox",
       loader: {
         color: "#666",
         diameter: 16
       },
       states: [
         {
-          title: "Start Daemon",
+          title: "Start Dropbox",
           callback: dbc.bound('start')
         }, {
-          title: "Stop Daemon",
+          title: "Stop Dropbox",
           callback: dbc.bound('stop')
         }
       ]
     }));
-    mcontainer.addSubView(this.installButton = new KDButtonView({
+    container.addSubView(this.installButton = new KDButtonView({
       title: "Install Dropbox",
-      cssClass: "clean-gray db-install hidden",
+      cssClass: "solid green db-install hidden",
       callback: function() {
         this.hide();
         return dbc.install();
@@ -297,19 +310,27 @@ DropboxMainView = (function(_super) {
     }));
     dbc.on("status-update", function(message, busy) {
       var _ref1;
-      _this.details.hide();
       _this.loader[busy ? "show" : "hide"]();
-      _this.message.updatePartial(message);
+      if (message) {
+        _this.message.updatePartial(message);
+      }
       _this.logger.info("DBC::STATE:", message);
       _this.logger.info("DBC::LAST_:", dbc._lastState);
       _this.toggle.hideLoader();
-      if (busy) {
+      if (busy && message) {
         return _this.toggle.hide();
       } else {
         if ((_ref1 = dbc._lastState) === 1 || _ref1 === 3) {
-          _this.toggle.setState("Stop Daemon");
+          _this.toggle.setState("Stop Dropbox");
+          if (dbc._lastState === 1) {
+            KD.utils.defer(function() {
+              if (!dbc._locked) {
+                return KD.utils.wait(4000, dbc.bound('updateStatus'));
+              }
+            });
+          }
         } else {
-          _this.toggle.setState("Start Daemon");
+          _this.toggle.setState("Start Dropbox");
         }
         if (dbc._lastState === 4) {
           _this.installButton.show();
@@ -325,14 +346,19 @@ DropboxMainView = (function(_super) {
               message = "" + err.message + " <cite>Retry</cite>";
             } else {
               message = "Please visit <a href=\"" + link + "\" target=_blank>" + link + "</a> to link\nyour Koding VM with your Dropbox account.";
+              KD.utils.wait(2500, dbc.bound('updateStatus'));
             }
             _this.details.updatePartial(message);
             return _this.details.show();
           });
+        } else {
+          return _this.details.hide();
         }
       }
     });
-    return dbc.init();
+    return KD.utils.defer(function() {
+      return dbc.init();
+    });
   };
 
   return DropboxMainView;

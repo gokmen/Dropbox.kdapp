@@ -14,7 +14,7 @@
 .dropbox .container {
   margin: 60px auto;
   height: auto;
-  border:1px solid #eee;
+  border:1px solid white;
   text-align:center;
   padding:20px;
   width:500px;
@@ -42,21 +42,25 @@
 }
 
 .dropbox .status-message .kdloader {
-  float:left;
-  top: 5px;
+  right: 5px;
+  top: 10px;
+  position: absolute;
 }
 
 .dropbox .status-message .message {
   float:left;
-  width:auto;
+  width: 470px;
   line-height:20px;
   margin: 5px;
+  margin-left:0;
+  text-overflow: ellipsis;
+  overflow:hidden;
+  white-space:nowrap; 
 }
 
-.dropbox .status-message .db-install,
-.dropbox .status-message .db-toggle {
-  position: absolute;
-  right:5px;
+.dropbox .db-install,
+.dropbox .db-toggle {
+  margin: 15px;
 }
 
 .dropbox .status-message .db-toggle > .kdloader {

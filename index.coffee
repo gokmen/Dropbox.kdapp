@@ -102,13 +102,17 @@ class DropboxClientController extends KDController
             else
               @init()
         else
-          @announce "Ready to go."
           @updateStatus()
   
-  install:->
+  install:(callback)->
 
     @announce "Installing Dropbox daemon...", yes
-    @kiteHelper.run "#{HELPER} install", @bound 'updateStatus'
+    @kiteHelper.run "#{HELPER} install", (err, res)=>
+      message = "Failed to install Dropbox, try again"
+      unless err
+        message = "Dropbox installed successfully, you can start the daemon now"
+        @_lastState = 0
+      @announce message
 
   start:->
     
@@ -135,7 +139,9 @@ class DropboxClientController extends KDController
   
   updateStatus:->
   
-    @announce "Checking Dropbox state...", yes
+    return  if @_locked
+    @_locked = yes
+    @announce null, yes
     @kiteHelper.run "#{HELPER} status", (err, res)=>
       message = "Failed to fetch state."
       
@@ -144,7 +150,8 @@ class DropboxClientController extends KDController
         @_lastState = res.exitStatus
       
       @announce message
-  
+      @_locked = no
+
   isInstalled: (cb)->
     
     @kiteHelper.run "#{HELPER} installed", (err, res)->
@@ -216,43 +223,46 @@ class DropboxMainView extends KDView
       click: (e)->
         dbc.updateStatus()  if $(e.target).is 'cite'
         
-    mcontainer.addSubView @toggle = new KDToggleButton
-      style           : "clean-gray db-toggle hidden"
-      defaultState    : "Start Daemon"
+    container.addSubView @toggle = new KDToggleButton
+      style           : "solid green db-toggle hidden"
+      defaultState    : "Start Dropbox"
       loader          :
         color         : "#666"
         diameter      : 16
       states          : [
-        title         : "Start Daemon"
+        title         : "Start Dropbox"
         callback      : dbc.bound 'start'
       ,
-        title         : "Stop Daemon"
+        title         : "Stop Dropbox"
         callback      : dbc.bound 'stop'
       ]    
     
-    mcontainer.addSubView @installButton = new KDButtonView
+    container.addSubView @installButton = new KDButtonView
       title    : "Install Dropbox"
-      cssClass : "clean-gray db-install hidden"
+      cssClass : "solid green db-install hidden"
       callback : ->
         @hide(); dbc.install()
     
     dbc.on "status-update", (message, busy)=>
       
-      @details.hide()
       @loader[if busy then "show" else "hide"]()
-      @message.updatePartial message
+      @message.updatePartial message  if message
       
       @logger.info "DBC::STATE:", message
       @logger.info "DBC::LAST_:", dbc._lastState
 
       @toggle.hideLoader()
-      if busy then @toggle.hide()
+      if busy and message then @toggle.hide()
       else
         
         if dbc._lastState in [1, 3]
-          @toggle.setState "Stop Daemon"
+          @toggle.setState "Stop Dropbox"
+          if dbc._lastState is 1
+            KD.utils.defer ->
+              unless dbc._locked
+                KD.utils.wait 4000, dbc.bound 'updateStatus'
         else
-          @toggle.setState "Start Daemon"
+          @toggle.setState "Start Dropbox"
         
         # not installed
         if dbc._lastState is 4
@@ -263,8 +273,9 @@ class DropboxMainView extends KDView
           @toggle.show()
           
         if dbc._lastState is 3
-          dbc.getAuthLink (err, link)=>
           
+          dbc.getAuthLink (err, link)=>
+            
             if err
               {message} = err
               message = """#{err.message} <cite>Retry</cite>"""
@@ -272,11 +283,16 @@ class DropboxMainView extends KDView
               message = """
                 Please visit <a href="#{link}" target=_blank>#{link}</a> to link
                 your Koding VM with your Dropbox account."""
+              KD.utils.wait 2500, dbc.bound 'updateStatus'
 
             @details.updatePartial message
             @details.show()
-    
-    dbc.init()
+
+        else  
+          @details.hide()
+                
+    KD.utils.defer ->
+      dbc.init()
 
 class DropboxController extends AppController
 
