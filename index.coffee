@@ -51,10 +51,10 @@ class KiteHelper extends KDController
       
     timeout ?= 60 * 1000
     @getKite().then (kite)->
+      kite.options.timeout = timeout
       kite.exec(cmd)
       .then (result)->
         callback null, result
-      .timeout(timeout)
     .catch (err)->
       callback
         message : "Failed to run #{cmd}"
