@@ -42,20 +42,23 @@ class KiteHelper extends KDController
             message: "No such kite for #{vm}"
           }
         
-        kite.options.timeout = 60 * 1000
         kite.vmOn().then -> resolve kite
       
-  run:(cmd, callback)->
-  
-    @getKite()
-    .then (kite)->
-      kite.exec(cmd).then (result)->
+  run:(cmd, timeout, callback)->
+    
+    unless callback
+      [timeout, callback] = [callback, timeout]
+      
+    timeout ?= 60 * 1000
+    @getKite().then (kite)->
+      kite.exec(cmd)
+      .then (result)->
         callback null, result
+      .timeout(timeout)
     .catch (err)->
-      callback {
-        message: "Failed to run #{cmd}"
-        details: err
-      }
+      callback
+        message : "Failed to run #{cmd}"
+        details : err
     
 # --- Koding Backend ------------------------ 8< ------    
 
@@ -85,7 +88,7 @@ class DropboxClientController extends KDController
   
   init:->
     
-    @_currentlyRunning = 0
+    @_lastState = 0
     @kiteHelper.getKite()
     .then (kite)=>
       
@@ -102,20 +105,36 @@ class DropboxClientController extends KDController
           @announce "Ready to go."
           @updateStatus()
   
-  install:(callback)->
+  install:->
 
     @announce "Installing Dropbox daemon...", yes
-    @kiteHelper.run "#{HELPER} install", (err, res)->
-      if err or not res
-      then callback no
-      else callback res.exitStatus is 1 
+    @kiteHelper.run "#{HELPER} install", @bound 'updateStatus'
 
+  start:->
+    
+    @announce "Starting Dropbox daemon...", yes
+    @kiteHelper.run "#{HELPER} start", 10000, @bound 'updateStatus'
+
+  stop:->
+    
+    @announce "Stoping Dropbox daemon...", yes
+    @kiteHelper.run "#{HELPER} stop", 10000, @bound 'updateStatus'
+
+  getAuthLink:(callback)->
+      
+    @kiteHelper.run "#{HELPER} link", (err, res)->
+      if not err and res.exitStatus is 5
+        callback null, res.stdout.match /https\S+/
+      else
+        callback {message: "Failed to fetch auth link."}
+        
   installHelper:(callback)->
-  
+
     @kiteHelper.run \
       "wget #{HELPER_SCRIPT} -O #{DROPBOX}", callback
   
   updateStatus:->
+  
     @announce "Checking Dropbox state...", yes
     @kiteHelper.run "#{HELPER} status", (err, res)=>
       message = "Failed to fetch state."
@@ -126,33 +145,12 @@ class DropboxClientController extends KDController
       
       @announce message
   
-  stop: (cb)->
-    
-    @kiteHelper.getKite()
-    .then (kite)->
-      kite.exec("#{HELPER} start")
-      .then (result)->
-        cb result.stdout
-    .catch (err)->
-      cb "failed"
-
   isInstalled: (cb)->
     
     @kiteHelper.run "#{HELPER} installed", (err, res)->
       if err or not res
       then cb no
       else cb result.exitStatus is 1
-
-  isRunning: (cb) ->
-  
-    @kiteHelper.getKite()
-    .then (kite)->
-      kite.exec("#{HELPER} running")
-      .then (result)->
-        cb result.exitStatus is 1
-    .catch (err)->
-      cb no
-
 
 # --- Dropbox Backend ----------------------- 8< ------    
 
@@ -177,6 +175,9 @@ class DropboxInstaller extends KDView
       
 class DropboxMainView extends KDView
 
+  [INSTALLED, NOT_INSTALLED, RUNNING, 
+   WAITING_LINK, RUNNING, NOT_RUNNING] = [20..26]
+  
   constructor:(options = {}, data)->
     options.cssClass = 'dropbox main-view'
     super options, data
@@ -187,19 +188,20 @@ class DropboxMainView extends KDView
 
   viewAppended:->
     
+    dbc = KD.singletons.dropboxController
+
     @addSubView container = new KDView
       cssClass : 'container'
   
     @addSubView @logger = new AppLogger
     @logger.info "Logger initialized."
-          
+             
     container.addSubView new KDView
       cssClass : "dropbox-logo"
+      click : dbc.bound 'updateStatus'
 
     container.addSubView mcontainer = new KDView
       cssClass : "status-message"
-
-    dbc = KD.singletons.dropboxController
       
     mcontainer.addSubView @loader = new KDLoaderView
       showLoader : yes
@@ -208,7 +210,12 @@ class DropboxMainView extends KDView
     mcontainer.addSubView @message = new KDView
       cssClass : 'message'
       partial : "Checking state..."
-    
+      
+    container.addSubView @details = new KDView
+      cssClass : 'details hidden'
+      click: (e)->
+        dbc.updateStatus()  if $(e.target).is 'cite'
+        
     mcontainer.addSubView @toggle = new KDToggleButton
       style           : "clean-gray db-toggle hidden"
       defaultState    : "Start Daemon"
@@ -217,35 +224,35 @@ class DropboxMainView extends KDView
         diameter      : 16
       states          : [
         title         : "Start Daemon"
-        callback      : (callback)->
-          KD.utils.wait 500, callback
+        callback      : dbc.bound 'start'
       ,
         title         : "Stop Daemon"
-        callback      : (callback)->
-          callback?()
+        callback      : dbc.bound 'stop'
       ]    
     
     mcontainer.addSubView @installButton = new KDButtonView
       title    : "Install Dropbox"
-      callback : -> dbc.install -> log arguments
       cssClass : "clean-gray db-install hidden"
+      callback : ->
+        @hide(); dbc.install()
     
     dbc.on "status-update", (message, busy)=>
       
-      running = dbc._lastState is 1
-
+      @details.hide()
       @loader[if busy then "show" else "hide"]()
       @message.updatePartial message
       
       @logger.info "DBC::STATE:", message
-      @logger.info "DBC::CURRENT:", running
+      @logger.info "DBC::LAST_:", dbc._lastState
 
+      @toggle.hideLoader()
       if busy then @toggle.hide()
       else
-        if running
-          @toggle.setTitle "Stop Daemon"
+        
+        if dbc._lastState in [1, 3]
+          @toggle.setState "Stop Daemon"
         else
-          @toggle.setTitle "Start Daemon"
+          @toggle.setState "Start Daemon"
         
         # not installed
         if dbc._lastState is 4
@@ -254,7 +261,21 @@ class DropboxMainView extends KDView
         else
           @installButton.hide()
           @toggle.show()
-      
+          
+        if dbc._lastState is 3
+          dbc.getAuthLink (err, link)=>
+          
+            if err
+              {message} = err
+              message = """#{err.message} <cite>Retry</cite>"""
+            else
+              message = """
+                Please visit <a href="#{link}" target=_blank>#{link}</a> to link
+                your Koding VM with your Dropbox account."""
+
+            @details.updatePartial message
+            @details.show()
+    
     dbc.init()
 
 class DropboxController extends AppController

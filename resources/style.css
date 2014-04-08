@@ -12,19 +12,35 @@
 }
 
 .dropbox .container {
-  width:500px;
   margin: 60px auto;
   height: auto;
   border:1px solid #eee;
   text-align:center;
   padding:20px;
+  width:500px;
+  padding-right:30px;
+}
+
+.dropbox .details {
+  padding: 5px;
+  font-size: 14px;
+  line-height:20px;
+  text-align:left;
+  word-break:break-all;
+  background: #eee;
+}
+
+.dropbox .details > cite {
+  color: #016FE5;
+  cursor: pointer;
 }
 
 .dropbox .status-message {
   border-bottom: 1px solid #eee;
-  border-radius: 5px;
-  width:100%;
+  text-align:left;
+  padding:5px;
 }
+
 .dropbox .status-message .kdloader {
   float:left;
   top: 5px;
@@ -34,7 +50,7 @@
   float:left;
   width:auto;
   line-height:20px;
-  margin: 5px
+  margin: 5px;
 }
 
 .dropbox .status-message .db-install,

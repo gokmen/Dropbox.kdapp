@@ -779,6 +779,24 @@ Prints out a public url for FILE.
 
 @command
 @requires_dropbox_running
+def link(args):
+    u"""get waiting for activation link of the dropboxd
+dropbox link
+
+Prints out the activation link of the Dropbox daemon.
+"""
+
+    status = open("/tmp/_dropbox.out", "r").readlines()[0:2]
+    if len(status) > 0:
+        link = "".join(status).rstrip("\n")
+        console_print(u"%s" % link)
+	return 5
+    else:
+	console_print(u"Auth link not found.")
+	return 4
+
+@command
+@requires_dropbox_running
 def status(args):
     u"""get current status of the dropboxd
 dropbox status
@@ -792,6 +810,7 @@ Prints out the current status of the Dropbox daemon.
     try:
         with closing(DropboxCommand()) as dc:
             try:
+		waiting = False
                 lines = dc.get_dropbox_status()[u'status']
                 if len(lines) == 0:
                     console_print(u'Idle')
@@ -799,10 +818,12 @@ Prints out the current status of the Dropbox daemon.
                     for line in lines:
                         console_print(line)
                         if line == u"Waiting to be linked to a Dropbox account...":
-                            status = open("/tmp/_dropbox.out", "r").readlines()[0:2]
-                            if len(status) > 0:
-                                link = "".join(status).rstrip("\n")
-                                console_print(u"%s" % link)
+                            # status = open("/tmp/_dropbox.out", "r").readlines()[0:2]
+                            # if len(status) > 0:
+                            #     link = "".join(status).rstrip("\n")
+                            #     console_print(u"%s" % link)
+		            waiting = True
+		    if waiting: return 3 
 		return 1
             except KeyError:
                 console_print(u"Couldn't get status: daemon isn't responding")
@@ -851,6 +872,8 @@ Stops the dropbox daemon.
                 console_print(u"Dropbox isn't responding!")
             except DropboxCommand.EOFError:
                 console_print(u"Dropbox daemon stopped.")
+            finally:
+                open("/tmp/_dropbox.out", "w").write("")
     except DropboxCommand.CouldntConnectError, e:
         console_print(u"Dropbox isn't running!")
 
