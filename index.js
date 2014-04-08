@@ -1,7 +1,7 @@
-/* Compiled by kdc on Tue Apr 08 2014 01:03:08 GMT+0000 (UTC) */
+/* Compiled by kdc on Tue Apr 08 2014 01:05:02 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
-/* BLOCK STARTS: index.coffee */
+/* BLOCK STARTS: /home/gokmen/Applications/Dropbox.kdapp/index.coffee */
 var AppLogItem, AppLogger, DropboxClientController, DropboxController, DropboxInstaller, DropboxMainView, KiteHelper,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -423,7 +423,6 @@ AppLogger = (function(_super) {
   AppLogger.prototype.viewAppended = function() {
     var view;
     view = this.list.getView();
-    view.toggleClass('in');
     this.addSubView(new KDHeaderView({
       title: "Logs",
       type: "small",

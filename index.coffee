@@ -118,7 +118,7 @@ class DropboxClientController extends KDController
   stop:->
     
     @announce "Stoping Dropbox daemon...", yes
-    @kiteHelper.run "#{HELPER} stop", 10000, @bound 'updateStatus'
+    @kiteHelper.run "#{HELPER} stop", 5000, @bound 'updateStatus'
 
   getAuthLink:(callback)->
       
@@ -340,7 +340,7 @@ class AppLogger extends KDView
   viewAppended:->
     
     view = @list.getView()
-    view.toggleClass 'in'
+    # view.toggleClass 'in'
     @addSubView new KDHeaderView
       title : "Logs"
       type  : "small"
