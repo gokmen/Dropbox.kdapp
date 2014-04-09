@@ -107,13 +107,15 @@ class DropboxClientController extends KDController
             else
               @init()
         else
-          @updateStatus()
+          @kiteHelper.run "#{HELPER} init", =>
+            @updateStatus()
   
   install:(callback)->
 
+    @_lastState = 7
     @announce "Installing Dropbox daemon...", yes
     @kiteHelper.run "#{HELPER} install", (err, res)=>
-      message = "Failed to install Dropbox, try again"
+      message = "Failed to install Dropbox, please try again."
       unless err
         message = "Dropbox installed successfully, you can start the daemon now"
         @_lastState = 0
@@ -122,12 +124,12 @@ class DropboxClientController extends KDController
   start:->
     
     @announce "Starting Dropbox daemon...", yes
-    @kiteHelper.run "#{HELPER} start", 10000, @bound 'updateStatus'
+    @kiteHelper.run "#{HELPER} start", 7000, @bound 'updateStatus'
 
   stop:->
     
     @announce "Stoping Dropbox daemon...", yes
-    @kiteHelper.run "#{HELPER} stop", 5000, @bound 'updateStatus'
+    @kiteHelper.run "#{HELPER} stop", @bound 'updateStatus'
 
   getAuthLink:(callback)->
       
@@ -155,7 +157,7 @@ class DropboxClientController extends KDController
         message = res.stdout
         @_lastState = res.exitStatus
       
-      @announce message
+      @announce message, res.exitStatus is 7
       @_locked = no
 
   isInstalled: (cb)->
@@ -239,6 +241,7 @@ class DropboxMainView extends KDView
       cssClass : "solid green db-install hidden"
       callback : ->
         @hide(); dbc.install()
+        KD.utils.wait 10000, dbc.bound 'updateStatus'
 
     @finderController = new NFinderController
       
@@ -257,8 +260,12 @@ class DropboxMainView extends KDView
 
       @toggle.hideLoader()
       
-      return  if busy
-
+      if busy
+        if dbc._lastState is 7
+          KD.utils.killWait dbc._timer
+          dbc._timer = KD.utils.wait 5000, dbc.bound 'updateStatus'
+        return
+      
       if dbc._lastState is 0 then @toggle.show()
       
       if dbc._lastState in [1, 3]
@@ -266,8 +273,8 @@ class DropboxMainView extends KDView
         if dbc._lastState is 1
           @finder.show()
           KD.utils.defer ->
-            unless dbc._locked
-              KD.utils.wait 5000, dbc.bound 'updateStatus'
+            KD.utils.killWait dbc._timer
+            dbc._timer = KD.utils.wait 5000, dbc.bound 'updateStatus'
       else
         @toggle.setState "Start Dropbox"
         @finder.hide()

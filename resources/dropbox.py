@@ -267,7 +267,7 @@ class DownloadState(object):
         if not self.local_file.closed:
             self.local_file.close()
 
-def download():
+def download(writeLog = False):
     global FatalVisibleError
     def FatalVisibleError(s):
         console_print(u"\nError: %s" % s, f=sys.stderr)
@@ -282,6 +282,7 @@ def download():
     write = sys.stdout.write
     flush = sys.stdout.flush
 
+    DOWNLOAD_OUT = "/tmp/_dropbox.download"
     last_progress = [None, None]
     def setprogress(text, frac):
         if last_progress == [text, frac]:
@@ -290,6 +291,8 @@ def download():
             write(erase_to_start)
             write(unsave)
         console_print(text % int(100*frac), linebreak=not sys.stdout.isatty())
+ 	if writeLog:
+            open(DOWNLOAD_OUT, "w").write(text % int(100*frac))
         if sys.stdout.isatty():
             flush()
         last_progress[0], last_progress[1] = text, frac
@@ -317,6 +320,9 @@ def download():
         setprogress(DOWNLOADING, 1.0)
         console_print()
         write(save)
+    finally:
+        if os.path.exists(DOWNLOAD_OUT):
+            os.remove(DOWNLOAD_OUT)
 
     try:
         for name, i, total in download.unpack():
@@ -327,6 +333,9 @@ def download():
         FatalVisibleError(ERROR_CONNECTING)
     else:
         setprogress(UNPACKING, 1.0)
+    finally:
+        if os.path.exists(DOWNLOAD_OUT):
+            os.remove(DOWNLOAD_OUT)
 
     console_print()
 
@@ -471,14 +480,26 @@ def alias(name):
     return decorator
 
 def requires_dropbox_running(meth):
+
     def newmeth(*n, **kw):
+        
+	DOWNLOAD_OUT = "/tmp/_dropbox.download"
+        if meth.func_name in ('start', 'stop', 'install', 'init'):
+            if os.path.exists(DOWNLOAD_OUT):
+                os.remove(DOWNLOAD_OUT)
+
     	if installed() != 1:
-            console_print(u"Dropbox is not installed!")
-	    return 4
+            if os.path.exists(DOWNLOAD_OUT):
+                console_print(u"%s" % "\n".join(open(DOWNLOAD_OUT).readlines()))
+                return 7
+            else:
+                console_print(u"Dropbox is not installed!")
+	        return 4
         elif is_dropbox_running():
             return meth(*n, **kw)
         else:
             console_print(u"Dropbox isn't running!")
+
     newmeth.func_name = meth.func_name
     newmeth.__doc__ = meth.__doc__
     return newmeth
@@ -578,6 +599,14 @@ def columnize(list, display_list=None, display_width=None):
         lines.append(line)
     for line in lines:
         console_print(line)
+
+@command
+@requires_dropbox_running
+def init(args):
+    u"""nothing special
+dropbox init...
+"""
+    return 0
 
 @command
 @requires_dropbox_running
@@ -1034,7 +1063,7 @@ Installs the dropbox daemon, dropboxd. If dropboxd is already installed, this wi
     if installed() != 1:
         # install dropbox!!!
         try:
-            download()
+            download(writeLog = True)
         except:
             traceback.print_exc()
 	else:

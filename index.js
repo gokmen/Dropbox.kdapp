@@ -1,4 +1,4 @@
-/* Compiled by kdc on Wed Apr 09 2014 03:04:18 GMT+0000 (UTC) */
+/* Compiled by kdc on Wed Apr 09 2014 05:57:27 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: index.coffee */
@@ -134,7 +134,9 @@ DropboxClientController = (function(_super) {
             }
           });
         } else {
-          return _this.updateStatus();
+          return _this.kiteHelper.run("" + HELPER + " init", function() {
+            return _this.updateStatus();
+          });
         }
       });
     });
@@ -142,10 +144,11 @@ DropboxClientController = (function(_super) {
 
   DropboxClientController.prototype.install = function(callback) {
     var _this = this;
+    this._lastState = 7;
     this.announce("Installing Dropbox daemon...", true);
     return this.kiteHelper.run("" + HELPER + " install", function(err, res) {
       var message;
-      message = "Failed to install Dropbox, try again";
+      message = "Failed to install Dropbox, please try again.";
       if (!err) {
         message = "Dropbox installed successfully, you can start the daemon now";
         _this._lastState = 0;
@@ -156,12 +159,12 @@ DropboxClientController = (function(_super) {
 
   DropboxClientController.prototype.start = function() {
     this.announce("Starting Dropbox daemon...", true);
-    return this.kiteHelper.run("" + HELPER + " start", 10000, this.bound('updateStatus'));
+    return this.kiteHelper.run("" + HELPER + " start", 7000, this.bound('updateStatus'));
   };
 
   DropboxClientController.prototype.stop = function() {
     this.announce("Stoping Dropbox daemon...", true);
-    return this.kiteHelper.run("" + HELPER + " stop", 5000, this.bound('updateStatus'));
+    return this.kiteHelper.run("" + HELPER + " stop", this.bound('updateStatus'));
   };
 
   DropboxClientController.prototype.getAuthLink = function(callback) {
@@ -194,7 +197,7 @@ DropboxClientController = (function(_super) {
         message = res.stdout;
         _this._lastState = res.exitStatus;
       }
-      _this.announce(message);
+      _this.announce(message, res.exitStatus === 7);
       return _this._locked = false;
     });
   };
@@ -291,7 +294,8 @@ DropboxMainView = (function(_super) {
       cssClass: "solid green db-install hidden",
       callback: function() {
         this.hide();
-        return dbc.install();
+        dbc.install();
+        return KD.utils.wait(10000, dbc.bound('updateStatus'));
       }
     }));
     this.finderController = new NFinderController;
@@ -312,6 +316,10 @@ DropboxMainView = (function(_super) {
       _this.logger.info(dbc._lastState);
       _this.toggle.hideLoader();
       if (busy) {
+        if (dbc._lastState === 7) {
+          KD.utils.killWait(dbc._timer);
+          dbc._timer = KD.utils.wait(5000, dbc.bound('updateStatus'));
+        }
         return;
       }
       if (dbc._lastState === 0) {
@@ -322,9 +330,8 @@ DropboxMainView = (function(_super) {
         if (dbc._lastState === 1) {
           _this.finder.show();
           KD.utils.defer(function() {
-            if (!dbc._locked) {
-              return KD.utils.wait(5000, dbc.bound('updateStatus'));
-            }
+            KD.utils.killWait(dbc._timer);
+            return dbc._timer = KD.utils.wait(5000, dbc.bound('updateStatus'));
           });
         }
       } else {
