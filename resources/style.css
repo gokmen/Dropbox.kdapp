@@ -11,14 +11,34 @@
   height: 150px;
 }
 
+.dropbox > .file-container {
+  background:white;
+  top: 0;
+  width: 500px;
+  margin: 0 auto;
+  border:1px solid #ccc;
+  height:400px;
+}
+
+.dropbox > .file-container .jtreeview-wrapper {
+  background:white;
+  width: 500px;
+}
+
+.dropbox > .file-container .vm .chevron, .path-select {
+  display:none;
+  visibility:hidden;
+}
+
 .dropbox .container {
   margin: 60px auto;
-  height: auto;
+  height: 240px;
   border:1px solid white;
   text-align:center;
   padding:20px;
   width:500px;
   padding-right:30px;
+  margin-bottom:0;
 }
 
 .dropbox .details {
@@ -39,6 +59,7 @@
   border-bottom: 1px solid #eee;
   text-align:left;
   padding:5px;
+  height: 30px;
 }
 
 .dropbox .status-message .kdloader {
@@ -70,6 +91,7 @@
 
 
 .app-logger {
+  z-index:1;
   width: 100%;
   height: auto;
   position: absolute;

@@ -1,4 +1,4 @@
-/* Compiled by kdc on Wed Apr 09 2014 00:46:23 GMT+0000 (UTC) */
+/* Compiled by kdc on Wed Apr 09 2014 02:49:11 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: index.coffee */
@@ -44,12 +44,17 @@ KiteHelper = (function(_super) {
     });
   };
 
+  KiteHelper.prototype.getVm = function() {
+    this._vm || (this._vm = this._vms.first);
+    return this._vm;
+  };
+
   KiteHelper.prototype.getKite = function() {
     var _this = this;
     return new Promise(function(resolve, reject) {
       return _this.getReady().then(function() {
         var kite, vm;
-        vm = _this._vm || _this._vms.first.hostnameAlias;
+        vm = _this.getVm().hostnameAlias;
         if (!(kite = _this._kites[vm])) {
           return reject({
             message: "No such kite for " + vm
@@ -204,16 +209,16 @@ DropboxClientController = (function(_super) {
     });
   };
 
+  DropboxClientController.prototype.createDropboxDirectory = function(path, cb) {
+    return this.kiteHelper.run("mkdir -p " + path, cb);
+  };
+
   return DropboxClientController;
 
 })(KDController);
 
 DropboxMainView = (function(_super) {
-  var INSTALLED, NOT_INSTALLED, NOT_RUNNING, RUNNING, WAITING_LINK, _ref;
-
   __extends(DropboxMainView, _super);
-
-  _ref = [20, 21, 22, 23, 24, 25, 26], INSTALLED = _ref[0], NOT_INSTALLED = _ref[1], RUNNING = _ref[2], WAITING_LINK = _ref[3], RUNNING = _ref[4], NOT_RUNNING = _ref[5];
 
   function DropboxMainView(options, data) {
     if (options == null) {
@@ -289,8 +294,14 @@ DropboxMainView = (function(_super) {
         return dbc.install();
       }
     }));
+    this.finderController = new NFinderController;
+    this.finderController.isNodesHiddenFor = function() {
+      return true;
+    };
+    this.addSubView(this.finder = this.finderController.getView());
+    this.finder.hide();
     dbc.on("status-update", function(message, busy) {
-      var _ref1;
+      var _ref;
       _this.loader[busy ? "show" : "hide"]();
       if (message) {
         _this.message.updatePartial(message);
@@ -306,17 +317,19 @@ DropboxMainView = (function(_super) {
       if (dbc._lastState === 0) {
         _this.toggle.show();
       }
-      if ((_ref1 = dbc._lastState) === 1 || _ref1 === 3) {
+      if ((_ref = dbc._lastState) === 1 || _ref === 3) {
         _this.toggle.setState("Stop Dropbox");
         if (dbc._lastState === 1) {
+          _this.finder.show();
           KD.utils.defer(function() {
             if (!dbc._locked) {
-              return KD.utils.wait(4000, dbc.bound('updateStatus'));
+              return KD.utils.wait(5000, dbc.bound('updateStatus'));
             }
           });
         }
       } else {
         _this.toggle.setState("Start Dropbox");
+        _this.finder.hide();
       }
       if (dbc._lastState === 4) {
         _this.installButton.show();
@@ -340,6 +353,14 @@ DropboxMainView = (function(_super) {
       } else {
         return _this.details.hide();
       }
+    });
+    dbc.ready(function() {
+      var vm;
+      vm = dbc.kiteHelper.getVm();
+      vm.path = "/home/" + (KD.nick()) + "/Dropbox";
+      return dbc.createDropboxDirectory(vm.path, function() {
+        return _this.finderController.mountVm(vm);
+      });
     });
     return KD.utils.defer(function() {
       return dbc.init();

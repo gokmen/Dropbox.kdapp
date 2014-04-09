@@ -29,13 +29,17 @@ class KiteHelper extends KDController
         @emit 'ready'
         resolve()
   
+  getVm:->
+    @_vm or= @_vms.first
+    return @_vm
+  
   getKite:->
     
     new Promise (resolve, reject)=>
 
       @getReady().then =>
       
-        vm = @_vm or @_vms.first.hostnameAlias
+        vm = @getVm().hostnameAlias
 
         unless kite = @_kites[vm]
           return reject {
@@ -159,6 +163,12 @@ class DropboxClientController extends KDController
       if err or not res
       then cb no
       else cb result.exitStatus is 1
+        
+  createDropboxDirectory:(path, cb)->
+    # No need to catch error so I'm using much efficient 'mkdir -p'
+    # @kiteHelper.getKite().then (kite)->
+    #   kite.fsCreateDirectory({path, donotoverwrite:yes}).nodeify(cb)
+    @kiteHelper.run "mkdir -p #{path}", cb
 
 # --- Dropbox Backend ----------------------- 8< ------    
 
@@ -171,9 +181,6 @@ class DropboxClientController extends KDController
 
 class DropboxMainView extends KDView
 
-  [INSTALLED, NOT_INSTALLED, RUNNING, 
-   WAITING_LINK, RUNNING, NOT_RUNNING] = [20..26]
-  
   constructor:(options = {}, data)->
     options.cssClass = 'dropbox main-view'
     super options, data
@@ -231,6 +238,13 @@ class DropboxMainView extends KDView
       cssClass : "solid green db-install hidden"
       callback : ->
         @hide(); dbc.install()
+
+    @finderController = new NFinderController
+      
+    # Temporary fix, until its fixed in upstream ~ GG
+    @finderController.isNodesHiddenFor = -> yes
+    @addSubView @finder = @finderController.getView()
+    @finder.hide()
     
     dbc.on "status-update", (message, busy)=>
       
@@ -249,11 +263,13 @@ class DropboxMainView extends KDView
       if dbc._lastState in [1, 3]
         @toggle.setState "Stop Dropbox"
         if dbc._lastState is 1
+          @finder.show()
           KD.utils.defer ->
             unless dbc._locked
-              KD.utils.wait 4000, dbc.bound 'updateStatus'
+              KD.utils.wait 5000, dbc.bound 'updateStatus'
       else
         @toggle.setState "Start Dropbox"
+        @finder.hide()
       
       # not installed
       if dbc._lastState is 4
@@ -282,8 +298,15 @@ class DropboxMainView extends KDView
       else  
         @details.hide()
 
-    KD.utils.defer ->
-      dbc.init()
+    
+    dbc.ready =>
+      vm = dbc.kiteHelper.getVm()
+      vm.path = "/home/#{KD.nick()}/Dropbox"
+
+      dbc.createDropboxDirectory vm.path, =>
+        @finderController.mountVm vm
+      
+    KD.utils.defer -> dbc.init()
 
 class DropboxController extends AppController
 
