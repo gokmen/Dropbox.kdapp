@@ -1,8 +1,8 @@
-/* Compiled by kdc on Tue Apr 08 2014 21:06:08 GMT+0000 (UTC) */
+/* Compiled by kdc on Wed Apr 09 2014 00:46:23 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: index.coffee */
-var AppLogItem, AppLogger, DropboxClientController, DropboxController, DropboxInstaller, DropboxMainView, KiteHelper,
+var AppLogItem, AppLogger, DropboxClientController, DropboxController, DropboxMainView, KiteHelper,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   __slice = [].slice;
@@ -177,7 +177,7 @@ DropboxClientController = (function(_super) {
 
   DropboxClientController.prototype.updateStatus = function() {
     var _this = this;
-    if (this._locked) {
+    if (this._locked || this._stopped) {
       return;
     }
     this._locked = true;
@@ -207,31 +207,6 @@ DropboxClientController = (function(_super) {
   return DropboxClientController;
 
 })(KDController);
-
-DropboxInstaller = (function(_super) {
-  __extends(DropboxInstaller, _super);
-
-  function DropboxInstaller(options, data) {
-    if (options == null) {
-      options = {};
-    }
-    options.cssClass = 'dropbox installer';
-    DropboxInstaller.__super__.constructor.call(this, options, data);
-  }
-
-  DropboxInstaller.prototype.viewAppended = function() {
-    return this.addSubView(new KDButtonView({
-      title: "Install Dropbox",
-      cssClass: "solid green",
-      callback: function() {
-        return alert("install");
-      }
-    }));
-  };
-
-  return DropboxInstaller;
-
-})(KDView);
 
 DropboxMainView = (function(_super) {
   var INSTALLED, NOT_INSTALLED, NOT_RUNNING, RUNNING, WAITING_LINK, _ref;
@@ -293,10 +268,16 @@ DropboxMainView = (function(_super) {
       states: [
         {
           title: "Start Dropbox",
-          callback: dbc.bound('start')
+          callback: function() {
+            this.hide();
+            return dbc.start();
+          }
         }, {
           title: "Stop Dropbox",
-          callback: dbc.bound('stop')
+          callback: function() {
+            this.hide();
+            return dbc.stop();
+          }
         }
       ]
     }));
@@ -314,46 +295,50 @@ DropboxMainView = (function(_super) {
       if (message) {
         _this.message.updatePartial(message);
       }
-      _this.logger.info("DBC::STATE:", message);
-      _this.logger.info("DBC::LAST_:", dbc._lastState);
+      if (message) {
+        _this.logger.info(message);
+      }
+      _this.logger.info(dbc._lastState);
       _this.toggle.hideLoader();
-      if (busy && message) {
-        return _this.toggle.hide();
-      } else {
-        if ((_ref1 = dbc._lastState) === 1 || _ref1 === 3) {
-          _this.toggle.setState("Stop Dropbox");
-          if (dbc._lastState === 1) {
-            KD.utils.defer(function() {
-              if (!dbc._locked) {
-                return KD.utils.wait(4000, dbc.bound('updateStatus'));
-              }
-            });
-          }
-        } else {
-          _this.toggle.setState("Start Dropbox");
-        }
-        if (dbc._lastState === 4) {
-          _this.installButton.show();
-          _this.toggle.hide();
-        } else {
-          _this.installButton.hide();
-          _this.toggle.show();
-        }
-        if (dbc._lastState === 3) {
-          return dbc.getAuthLink(function(err, link) {
-            if (err) {
-              message = err.message;
-              message = "" + err.message + " <cite>Retry</cite>";
-            } else {
-              message = "Please visit <a href=\"" + link + "\" target=_blank>" + link + "</a> to link\nyour Koding VM with your Dropbox account.";
-              KD.utils.wait(2500, dbc.bound('updateStatus'));
+      if (busy) {
+        return;
+      }
+      if (dbc._lastState === 0) {
+        _this.toggle.show();
+      }
+      if ((_ref1 = dbc._lastState) === 1 || _ref1 === 3) {
+        _this.toggle.setState("Stop Dropbox");
+        if (dbc._lastState === 1) {
+          KD.utils.defer(function() {
+            if (!dbc._locked) {
+              return KD.utils.wait(4000, dbc.bound('updateStatus'));
             }
-            _this.details.updatePartial(message);
-            return _this.details.show();
           });
-        } else {
-          return _this.details.hide();
         }
+      } else {
+        _this.toggle.setState("Start Dropbox");
+      }
+      if (dbc._lastState === 4) {
+        _this.installButton.show();
+        _this.toggle.hide();
+      } else {
+        _this.installButton.hide();
+        _this.toggle.show();
+      }
+      if (dbc._lastState === 3) {
+        return dbc.getAuthLink(function(err, link) {
+          if (err) {
+            message = err.message;
+            message = "" + err.message + " <cite>Retry</cite>";
+          } else {
+            message = "Please visit <a href=\"" + link + "\" target=_blank>" + link + "</a> to link\nyour Koding VM with your Dropbox account.";
+            KD.utils.wait(2500, dbc.bound('updateStatus'));
+          }
+          _this.details.updatePartial(message);
+          return _this.details.show();
+        });
+      } else {
+        return _this.details.hide();
       }
     });
     return KD.utils.defer(function() {
@@ -369,6 +354,8 @@ DropboxController = (function(_super) {
   __extends(DropboxController, _super);
 
   function DropboxController(options, data) {
+    var appManager, dropboxController, updateStatus, windowController, _ref,
+      _this = this;
     if (options == null) {
       options = {};
     }
@@ -378,6 +365,22 @@ DropboxController = (function(_super) {
       type: "application"
     };
     DropboxController.__super__.constructor.call(this, options, data);
+    dropboxController = KD.singletons.dropboxController;
+    updateStatus = function(state) {
+      dropboxController._stopped = !state;
+      if (state) {
+        return dropboxController.updateStatus();
+      }
+    };
+    _ref = KD.singletons, windowController = _ref.windowController, appManager = _ref.appManager;
+    appManager.on('AppIsBeingShown', function(app) {
+      return updateStatus(app.getId() === _this.getId());
+    });
+    windowController.addFocusListener(function(state) {
+      if (appManager.frontApp.getId() === _this.getId()) {
+        return updateStatus(state);
+      }
+    });
   }
 
   return DropboxController;

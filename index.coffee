@@ -139,7 +139,8 @@ class DropboxClientController extends KDController
   
   updateStatus:->
   
-    return  if @_locked
+    return  if @_locked or @_stopped
+    
     @_locked = yes
     @announce null, yes
     @kiteHelper.run "#{HELPER} status", (err, res)=>
@@ -168,18 +169,6 @@ class DropboxClientController extends KDController
 
 # --- Dropbox UI ---------------------------- 8< ------    
 
-class DropboxInstaller extends KDView
-  
-  constructor:(options = {}, data)->
-    options.cssClass = 'dropbox installer'
-    super options, data
-
-  viewAppended:->
-    @addSubView new KDButtonView
-      title : "Install Dropbox"
-      cssClass : "solid green"
-      callback : -> alert "install"
-      
 class DropboxMainView extends KDView
 
   [INSTALLED, NOT_INSTALLED, RUNNING, 
@@ -196,7 +185,7 @@ class DropboxMainView extends KDView
   viewAppended:->
     
     dbc = KD.singletons.dropboxController
-
+    
     @addSubView container = new KDView
       cssClass : 'container'
   
@@ -231,10 +220,10 @@ class DropboxMainView extends KDView
         diameter      : 16
       states          : [
         title         : "Start Dropbox"
-        callback      : dbc.bound 'start'
+        callback      : -> this.hide(); dbc.start()
       ,
         title         : "Stop Dropbox"
-        callback      : dbc.bound 'stop'
+        callback      : -> this.hide(); dbc.stop()
       ]    
     
     container.addSubView @installButton = new KDButtonView
@@ -248,49 +237,51 @@ class DropboxMainView extends KDView
       @loader[if busy then "show" else "hide"]()
       @message.updatePartial message  if message
       
-      @logger.info "DBC::STATE:", message
-      @logger.info "DBC::LAST_:", dbc._lastState
+      @logger.info message  if message
+      @logger.info dbc._lastState
 
       @toggle.hideLoader()
-      if busy and message then @toggle.hide()
+      
+      return  if busy
+
+      if dbc._lastState is 0 then @toggle.show()
+      
+      if dbc._lastState in [1, 3]
+        @toggle.setState "Stop Dropbox"
+        if dbc._lastState is 1
+          KD.utils.defer ->
+            unless dbc._locked
+              KD.utils.wait 4000, dbc.bound 'updateStatus'
       else
+        @toggle.setState "Start Dropbox"
+      
+      # not installed
+      if dbc._lastState is 4
+        @installButton.show()
+        @toggle.hide()
+      else
+        @installButton.hide()
+        @toggle.show()
         
-        if dbc._lastState in [1, 3]
-          @toggle.setState "Stop Dropbox"
-          if dbc._lastState is 1
-            KD.utils.defer ->
-              unless dbc._locked
-                KD.utils.wait 4000, dbc.bound 'updateStatus'
-        else
-          @toggle.setState "Start Dropbox"
+      if dbc._lastState is 3
         
-        # not installed
-        if dbc._lastState is 4
-          @installButton.show()
-          @toggle.hide()
-        else
-          @installButton.hide()
-          @toggle.show()
+        dbc.getAuthLink (err, link)=>
           
-        if dbc._lastState is 3
-          
-          dbc.getAuthLink (err, link)=>
-            
-            if err
-              {message} = err
-              message = """#{err.message} <cite>Retry</cite>"""
-            else
-              message = """
-                Please visit <a href="#{link}" target=_blank>#{link}</a> to link
-                your Koding VM with your Dropbox account."""
-              KD.utils.wait 2500, dbc.bound 'updateStatus'
+          if err
+            {message} = err
+            message = """#{err.message} <cite>Retry</cite>"""
+          else
+            message = """
+              Please visit <a href="#{link}" target=_blank>#{link}</a> to link
+              your Koding VM with your Dropbox account."""
+            KD.utils.wait 2500, dbc.bound 'updateStatus'
 
-            @details.updatePartial message
-            @details.show()
+          @details.updatePartial message
+          @details.show()
 
-        else  
-          @details.hide()
-                
+      else  
+        @details.hide()
+
     KD.utils.defer ->
       dbc.init()
 
@@ -303,6 +294,21 @@ class DropboxController extends AppController
       type : "application"
 
     super options, data
+
+    {dropboxController} = KD.singletons
+
+    updateStatus = (state)->
+      dropboxController._stopped = !state
+      dropboxController.updateStatus()  if state
+
+    {windowController, appManager} = KD.singletons
+    
+    appManager.on 'AppIsBeingShown', (app)=>
+      updateStatus app.getId() is @getId()
+
+    windowController.addFocusListener (state)=>
+      if appManager.frontApp.getId() is @getId()
+        updateStatus state
 
 # --- Dropbox UI ---------------------------- 8< ------    
     
