@@ -53,7 +53,8 @@ class KiteHelper extends KDController
     unless callback
       [timeout, callback] = [callback, timeout]
       
-    timeout ?= 60 * 1000
+    # Set it to 10 min if not given
+    timeout ?= 10 * 60 * 1000
     @getKite().then (kite)->
       kite.options.timeout = timeout
       kite.exec(cmd)

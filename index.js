@@ -1,4 +1,4 @@
-/* Compiled by kdc on Wed Apr 09 2014 02:49:11 GMT+0000 (UTC) */
+/* Compiled by kdc on Wed Apr 09 2014 03:04:18 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: index.coffee */
@@ -73,7 +73,7 @@ KiteHelper = (function(_super) {
       _ref = [callback, timeout], timeout = _ref[0], callback = _ref[1];
     }
     if (timeout == null) {
-      timeout = 60 * 1000;
+      timeout = 10 * 60 * 1000;
     }
     return this.getKite().then(function(kite) {
       kite.options.timeout = timeout;
