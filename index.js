@@ -1,4 +1,4 @@
-/* Compiled by kdc on Wed Apr 09 2014 05:57:27 GMT+0000 (UTC) */
+/* Compiled by kdc on Thu Apr 10 2014 23:46:13 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: index.coffee */
@@ -77,7 +77,9 @@ KiteHelper = (function(_super) {
     }
     return this.getKite().then(function(kite) {
       kite.options.timeout = timeout;
-      return kite.exec(cmd).then(function(result) {
+      return kite.exec({
+        command: cmd
+      }).then(function(result) {
         return callback(null, result);
       });
     })["catch"](function(err) {
@@ -97,7 +99,7 @@ DropboxClientController = (function(_super) {
 
   __extends(DropboxClientController, _super);
 
-  HELPER_SCRIPT = "https://raw.githubusercontent.com/gokmen/Dropbox.kdapp/master/resources/dropbox.py";
+  HELPER_SCRIPT = "https://rest.kd.io/gokmen/Dropbox.kdapp/master/resources/dropbox.py";
 
   DROPBOX = "/tmp/_dropbox.py";
 
@@ -144,7 +146,6 @@ DropboxClientController = (function(_super) {
 
   DropboxClientController.prototype.install = function(callback) {
     var _this = this;
-    this._lastState = 7;
     this.announce("Installing Dropbox daemon...", true);
     return this.kiteHelper.run("" + HELPER + " install", function(err, res) {
       var message;
@@ -192,6 +193,10 @@ DropboxClientController = (function(_super) {
     this.announce(null, true);
     return this.kiteHelper.run("" + HELPER + " status", function(err, res) {
       var message;
+      log({
+        err: err,
+        res: res
+      });
       message = "Failed to fetch state.";
       if (!err) {
         message = res.stdout;
@@ -294,8 +299,7 @@ DropboxMainView = (function(_super) {
       cssClass: "solid green db-install hidden",
       callback: function() {
         this.hide();
-        dbc.install();
-        return KD.utils.wait(10000, dbc.bound('updateStatus'));
+        return dbc.install();
       }
     }));
     this.finderController = new NFinderController;
@@ -316,10 +320,6 @@ DropboxMainView = (function(_super) {
       _this.logger.info(dbc._lastState);
       _this.toggle.hideLoader();
       if (busy) {
-        if (dbc._lastState === 7) {
-          KD.utils.killWait(dbc._timer);
-          dbc._timer = KD.utils.wait(5000, dbc.bound('updateStatus'));
-        }
         return;
       }
       if (dbc._lastState === 0) {
@@ -331,7 +331,7 @@ DropboxMainView = (function(_super) {
           _this.finder.show();
           KD.utils.defer(function() {
             KD.utils.killWait(dbc._timer);
-            return dbc._timer = KD.utils.wait(5000, dbc.bound('updateStatus'));
+            return dbc._timer = KD.utils.wait(25000, dbc.bound('updateStatus'));
           });
         }
       } else {
@@ -340,9 +340,11 @@ DropboxMainView = (function(_super) {
       }
       if (dbc._lastState === 4) {
         _this.installButton.show();
+        _this.finder.hide();
         _this.toggle.hide();
       } else {
         _this.installButton.hide();
+        _this.finder.show();
         _this.toggle.show();
       }
       if (dbc._lastState === 3) {

@@ -483,18 +483,9 @@ def requires_dropbox_running(meth):
 
     def newmeth(*n, **kw):
         
-	DOWNLOAD_OUT = "/tmp/_dropbox.download"
-        if meth.func_name in ('start', 'stop', 'install', 'init'):
-            if os.path.exists(DOWNLOAD_OUT):
-                os.remove(DOWNLOAD_OUT)
-
     	if installed() != 1:
-            if os.path.exists(DOWNLOAD_OUT):
-                console_print(u"%s" % "\n".join(open(DOWNLOAD_OUT).readlines()))
-                return 7
-            else:
-                console_print(u"Dropbox is not installed!")
-	        return 4
+            console_print(u"Dropbox is not installed!")
+	    return 4
         elif is_dropbox_running():
             return meth(*n, **kw)
         else:
@@ -599,14 +590,6 @@ def columnize(list, display_list=None, display_width=None):
         lines.append(line)
     for line in lines:
         console_print(line)
-
-@command
-@requires_dropbox_running
-def init(args):
-    u"""nothing special
-dropbox init...
-"""
-    return 0
 
 @command
 @requires_dropbox_running

@@ -57,7 +57,7 @@ class KiteHelper extends KDController
     timeout ?= 10 * 60 * 1000
     @getKite().then (kite)->
       kite.options.timeout = timeout
-      kite.exec(cmd)
+      kite.exec(command: cmd)
       .then (result)->
         callback null, result
     .catch (err)->
@@ -76,7 +76,7 @@ class KiteHelper extends KDController
 
 class DropboxClientController extends KDController
   
-  HELPER_SCRIPT = "https://raw.githubusercontent.com/gokmen/Dropbox.kdapp/master/resources/dropbox.py"
+  HELPER_SCRIPT = "https://rest.kd.io/gokmen/Dropbox.kdapp/master/resources/dropbox.py"
   DROPBOX = "/tmp/_dropbox.py"
   HELPER  = "python #{DROPBOX}"
   
@@ -112,7 +112,7 @@ class DropboxClientController extends KDController
   
   install:(callback)->
 
-    @_lastState = 7
+    # @_lastState = 7
     @announce "Installing Dropbox daemon...", yes
     @kiteHelper.run "#{HELPER} install", (err, res)=>
       message = "Failed to install Dropbox, please try again."
@@ -151,6 +151,7 @@ class DropboxClientController extends KDController
     @_locked = yes
     @announce null, yes
     @kiteHelper.run "#{HELPER} status", (err, res)=>
+      log {err, res}
       message = "Failed to fetch state."
       
       unless err
@@ -168,9 +169,6 @@ class DropboxClientController extends KDController
       else cb result.exitStatus is 1
         
   createDropboxDirectory:(path, cb)->
-    # No need to catch error so I'm using much efficient 'mkdir -p'
-    # @kiteHelper.getKite().then (kite)->
-    #   kite.fsCreateDirectory({path, donotoverwrite:yes}).nodeify(cb)
     @kiteHelper.run "mkdir -p #{path}", cb
 
 # --- Dropbox Backend ----------------------- 8< ------    
@@ -241,7 +239,6 @@ class DropboxMainView extends KDView
       cssClass : "solid green db-install hidden"
       callback : ->
         @hide(); dbc.install()
-        KD.utils.wait 10000, dbc.bound 'updateStatus'
 
     @finderController = new NFinderController
       
@@ -260,11 +257,7 @@ class DropboxMainView extends KDView
 
       @toggle.hideLoader()
       
-      if busy
-        if dbc._lastState is 7
-          KD.utils.killWait dbc._timer
-          dbc._timer = KD.utils.wait 5000, dbc.bound 'updateStatus'
-        return
+      return  if busy
       
       if dbc._lastState is 0 then @toggle.show()
       
@@ -274,7 +267,7 @@ class DropboxMainView extends KDView
           @finder.show()
           KD.utils.defer ->
             KD.utils.killWait dbc._timer
-            dbc._timer = KD.utils.wait 5000, dbc.bound 'updateStatus'
+            dbc._timer = KD.utils.wait 25000, dbc.bound 'updateStatus'
       else
         @toggle.setState "Start Dropbox"
         @finder.hide()
@@ -282,9 +275,11 @@ class DropboxMainView extends KDView
       # not installed
       if dbc._lastState is 4
         @installButton.show()
+        @finder.hide()
         @toggle.hide()
       else
         @installButton.hide()
+        @finder.show()
         @toggle.show()
         
       if dbc._lastState is 3
