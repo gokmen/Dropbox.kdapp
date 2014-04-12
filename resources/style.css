@@ -12,17 +12,27 @@
 }
 
 .dropbox > .file-container {
+  position:absolute;
+  height:100%;  
   background:white;
-  top: 0;
-  width: 500px;
-  margin: 0 auto;
+  top: 55px;
+  width: 240px;
   border-bottom:1px solid #eee;
-  height:400px;
+  border-right:1px solid #ccc;
+  
+  -webkit-transition: left .6s;
+  transition: left .6s;
+  left: -242px;
+  
+}
+
+.dropbox > .file-container.filemode {
+  left: 0;
 }
 
 .dropbox > .file-container .jtreeview-wrapper {
   background:white;
-  width: 500px;
+  width: 240px;
 }
 
 .dropbox > .file-container .vm .chevron, .path-select {
@@ -33,6 +43,7 @@
 .dropbox > .file-container .vm {
   background:none;
   border-top:1px solid #eee;
+  border-bottom:1px solid #eee;
 }
 
 .dropbox > .file-container .vm .icon {
@@ -43,7 +54,6 @@
   /* background:rgba(1, 111, 229, 1); */
 }
 
-
 .dropbox .container {
   margin: 60px auto;
   height: auto;
@@ -52,6 +62,15 @@
   width:500px;
   min-height: 280px;
   margin-bottom:0;
+  
+  -webkit-transition: padding-left .6s;
+  transition: padding-left .6s;
+  padding-left: 0;
+
+}
+
+.dropbox .container.filemode {
+  padding-left: 240px; 
 }
 
 .dropbox .details {

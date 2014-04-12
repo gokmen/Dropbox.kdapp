@@ -802,10 +802,10 @@ Prints out the activation link of the Dropbox daemon.
     if len(status) > 0:
         link = "".join(status).rstrip("\n")
         console_print(u"%s" % link)
-	return 5
+        return 5
     else:
 	console_print(u"Auth link not found.")
-	return 4
+        return 4
 
 @command
 @requires_dropbox_running

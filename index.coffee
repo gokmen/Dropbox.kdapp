@@ -3,9 +3,6 @@
 
 class KiteHelper extends KDController
   
-  constructor:(options = {}, data)->
-    super
-  
   getReady:->
   
     new Promise (resolve, reject) =>
@@ -42,9 +39,8 @@ class KiteHelper extends KDController
         vm = @getVm().hostnameAlias
 
         unless kite = @_kites[vm]
-          return reject {
+          return reject
             message: "No such kite for #{vm}"
-          }
         
         kite.vmOn().then -> resolve kite
       
@@ -79,8 +75,15 @@ class DropboxClientController extends KDController
   HELPER_SCRIPT = "https://rest.kd.io/gokmen/Dropbox.kdapp/master/resources/dropbox.py"
   DROPBOX = "/tmp/_dropbox.py"
   HELPER  = "python #{DROPBOX}"
+  [IDLE, RUNNING, HELPER_FAILED, WAITING_FOR_REGISTER,
+   NOT_INSTALLED, AUTH_LINK_FOUND] = [0..5]
   
   constructor:(options = {}, data)->
+    
+    # Uncomment these before deploy
+    # {dropboxController} = KD.singletons
+    # return dropboxController if dropboxController
+    
     super options, data
     
     @kiteHelper = new KiteHelper
@@ -88,18 +91,16 @@ class DropboxClientController extends KDController
     
     @registerSingleton "dropboxController", this, yes
   
-  announce:(m, b)->
-    @emit "status-update", m, b
+  announce:(message, busy)->
+    @emit "status-update", message, busy
   
   init:->
     
-    @_lastState = 0
-    @kiteHelper.getKite()
-    .then (kite)=>
-      
-      kite.fsExists(path : DROPBOX)
-      .then (state)=>
+    @_lastState = IDLE
+    @kiteHelper.getKite().then (kite)=>
+      kite.fsExists(path : DROPBOX).then (state)=>
         if not state
+          @_lastState = HELPER_FAILED
           @announce "Dropbox helper is not available, fixing...", yes
           @installHelper (err, state)=>
             if err or not state
@@ -107,20 +108,19 @@ class DropboxClientController extends KDController
             else
               @init()
         else
-          @kiteHelper.run "#{HELPER} init", =>
-            @updateStatus()
+          @updateStatus yes
   
   install:(callback)->
 
-    # @_lastState = 7
     @announce "Installing Dropbox daemon...", yes
     @kiteHelper.run "#{HELPER} install", (err, res)=>
-      message = "Failed to install Dropbox, please try again."
-      unless err
-        message = "Dropbox installed successfully, you can start the daemon now"
-        @_lastState = 0
-      @announce message
-
+      if err
+        @announce "Failed to install Dropbox, please try again."
+      else
+        KD.utils.wait 2000, =>
+          @announce "Dropbox installed successfully, you can start the daemon now"
+          @_lastState = IDLE
+      
   start:->
     
     @announce "Starting Dropbox daemon...", yes
@@ -132,9 +132,8 @@ class DropboxClientController extends KDController
     @kiteHelper.run "#{HELPER} stop", @bound 'updateStatus'
 
   getAuthLink:(callback)->
-      
     @kiteHelper.run "#{HELPER} link", (err, res)->
-      if not err and res.exitStatus is 5
+      if not err and res.exitStatus is AUTH_LINK_FOUND
         callback null, res.stdout.match /https\S+/
       else
         callback {message: "Failed to fetch auth link."}
@@ -144,30 +143,24 @@ class DropboxClientController extends KDController
     @kiteHelper.run \
       "wget #{HELPER_SCRIPT} -O #{DROPBOX}", callback
   
-  updateStatus:->
+  updateStatus:(keepCurrentState = no)->
   
     return  if @_locked or @_stopped
     
     @_locked = yes
-    @announce null, yes
+    unless keepCurrentState
+      @announce null, yes
+      
     @kiteHelper.run "#{HELPER} status", (err, res)=>
-      log {err, res}
       message = "Failed to fetch state."
       
       unless err
         message = res.stdout
         @_lastState = res.exitStatus
       
-      @announce message, res.exitStatus is 7
+      @announce message
       @_locked = no
 
-  isInstalled: (cb)->
-    
-    @kiteHelper.run "#{HELPER} installed", (err, res)->
-      if err or not res
-      then cb no
-      else cb result.exitStatus is 1
-        
   createDropboxDirectory:(path, cb)->
     @kiteHelper.run "mkdir -p #{path}", cb
 
@@ -182,13 +175,16 @@ class DropboxClientController extends KDController
 
 class DropboxMainView extends KDView
 
+  [IDLE, RUNNING, HELPER_FAILED, WAITING_FOR_REGISTER,
+   NOT_INSTALLED, AUTH_LINK_FOUND] = [0..5]
+  
   constructor:(options = {}, data)->
     options.cssClass = 'dropbox main-view'
     super options, data
 
-    # Comment-out this before deploy ~ GG
-    # unless KD.singletons.dropboxController
     new DropboxClientController
+    @logger = new AppLogger
+    @logger.info "Logger initialized."
 
   viewAppended:->
     
@@ -197,9 +193,6 @@ class DropboxMainView extends KDView
     @addSubView container = new KDView
       cssClass : 'container'
   
-    @addSubView @logger = new AppLogger
-    @logger.info "Logger initialized."
-             
     container.addSubView new KDView
       cssClass : "dropbox-logo"
       click : dbc.bound 'updateStatus'
@@ -221,17 +214,17 @@ class DropboxMainView extends KDView
         dbc.updateStatus()  if $(e.target).is 'cite'
         
     container.addSubView @toggle = new KDToggleButton
-      style           : "solid green db-toggle hidden"
-      defaultState    : "Start Dropbox"
-      loader          :
-        color         : "#666"
-        diameter      : 16
-      states          : [
-        title         : "Start Dropbox"
-        callback      : -> this.hide(); dbc.start()
+      style        : "solid green db-toggle hidden"
+      defaultState : "Start Dropbox"
+      loader       :
+        color      : "#666"
+        diameter   : 16
+      states       : [
+        title      : "Start Dropbox"
+        callback   : -> this.hide(); dbc.start()
       ,
-        title         : "Stop Dropbox"
-        callback      : -> this.hide(); dbc.stop()
+        title      : "Stop Dropbox"
+        callback   : -> this.hide(); dbc.stop()
       ]    
     
     container.addSubView @installButton = new KDButtonView
@@ -245,35 +238,42 @@ class DropboxMainView extends KDView
     # Temporary fix, until its fixed in upstream ~ GG
     @finderController.isNodesHiddenFor = -> yes
     @addSubView @finder = @finderController.getView()
-    @finder.hide()
     
+    @finder.show = ->
+      @unsetClass 'hidden'
+      @setClass 'filemode'
+      container.setClass 'filemode'
+
+    @finder.hide = ->
+      return  if @hasClass 'hidden'
+      @unsetClass 'filemode'
+      container.unsetClass 'filemode'
+      @setClass 'hidden'
+
     dbc.on "status-update", (message, busy)=>
       
       @loader[if busy then "show" else "hide"]()
       @message.updatePartial message  if message
       
-      @logger.info message  if message
-      @logger.info dbc._lastState
+      if message
+        @logger.info message, "| State:", dbc._lastState
 
       @toggle.hideLoader()
       
       return  if busy
       
-      if dbc._lastState is 0 then @toggle.show()
+      if dbc._lastState is IDLE then @toggle.show()
       
-      if dbc._lastState in [1, 3]
+      if dbc._lastState in [RUNNING, WAITING_FOR_REGISTER]
         @toggle.setState "Stop Dropbox"
-        if dbc._lastState is 1
-          @finder.show()
+        if dbc._lastState is RUNNING
           KD.utils.defer ->
             KD.utils.killWait dbc._timer
-            dbc._timer = KD.utils.wait 25000, dbc.bound 'updateStatus'
+            dbc._timer = KD.utils.wait 4000, dbc.bound 'updateStatus'
       else
         @toggle.setState "Start Dropbox"
-        @finder.hide()
       
-      # not installed
-      if dbc._lastState is 4
+      if dbc._lastState is NOT_INSTALLED
         @installButton.show()
         @finder.hide()
         @toggle.hide()
@@ -282,7 +282,7 @@ class DropboxMainView extends KDView
         @finder.show()
         @toggle.show()
         
-      if dbc._lastState is 3
+      if dbc._lastState is WAITING_FOR_REGISTER
         
         dbc.getAuthLink (err, link)=>
           
@@ -321,11 +321,16 @@ class DropboxController extends AppController
 
     super options, data
 
+    {@logger} = @getView()
     {dropboxController} = KD.singletons
 
-    updateStatus = (state)->
+    updateStatus = (state)=>
       dropboxController._stopped = !state
-      dropboxController.updateStatus()  if state
+      if state
+        @logger.info "Dropbox app is active now, check status."
+        dropboxController.updateStatus()
+      else
+        @logger.info "Dropbox app lost the focus, stop polling."
 
     {windowController, appManager} = KD.singletons
     
@@ -335,6 +340,11 @@ class DropboxController extends AppController
     windowController.addFocusListener (state)=>
       if appManager.frontApp.getId() is @getId()
         updateStatus state
+  
+  enableLogs:->
+    view = @getView()
+    return  if view.logger.parentIsInDom
+    view.addSubView view.logger
 
 # --- Dropbox UI ---------------------------- 8< ------    
     
@@ -383,18 +393,18 @@ class AppLogger extends KDView
     ['log', 'warn', 'info', 'error'].forEach (mtype)=>
       this[mtype] = (rest...) =>
         @list.addItem {message: rest}, {type:mtype}
-        console[mtype] rest
+        console[mtype] rest  if @parentIsInDom
         
   viewAppended:->
     
     view = @list.getView()
-    # view.toggleClass 'in'
     @addSubView new KDHeaderView
       title : "Logs"
       type  : "small"
       click : -> view.toggleClass 'in'
         
     @addSubView view
+    KD.utils.wait 500, -> view.toggleClass 'in'
 
 # --- App Logger ---------------------------- 8< ------    
 
