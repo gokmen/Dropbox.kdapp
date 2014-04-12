@@ -118,9 +118,9 @@ class DropboxClientController extends KDController
         @announce "Failed to install Dropbox, please try again."
       else
         KD.utils.wait 2000, =>
-          @announce "Dropbox installed successfully, you can start the daemon now"
           @_lastState = IDLE
-      
+          @announce "Dropbox installed successfully, you can start the daemon now"
+          
   start:->
     
     @announce "Starting Dropbox daemon...", yes

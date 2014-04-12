@@ -1,4 +1,4 @@
-/* Compiled by kdc on Sat Apr 12 2014 01:54:18 GMT+0000 (UTC) */
+/* Compiled by kdc on Sat Apr 12 2014 02:11:04 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: index.coffee */
@@ -151,8 +151,8 @@ DropboxClientController = (function(_super) {
         return _this.announce("Failed to install Dropbox, please try again.");
       } else {
         return KD.utils.wait(2000, function() {
-          _this.announce("Dropbox installed successfully, you can start the daemon now");
-          return _this._lastState = IDLE;
+          _this._lastState = IDLE;
+          return _this.announce("Dropbox installed successfully, you can start the daemon now");
         });
       }
     });
