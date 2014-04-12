@@ -279,8 +279,9 @@ class DropboxMainView extends KDView
         @toggle.hide()
       else
         @installButton.hide()
-        @finder.show()
-        @toggle.show()
+        if dbc._lastState is HELPER_FAILED
+        then @loader.show()
+        else @finder.show(); @toggle.show()
         
       if dbc._lastState is WAITING_FOR_REGISTER
         

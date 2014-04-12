@@ -1,4 +1,4 @@
-/* Compiled by kdc on Sat Apr 12 2014 02:11:04 GMT+0000 (UTC) */
+/* Compiled by kdc on Sat Apr 12 2014 02:18:30 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: index.coffee */
@@ -348,8 +348,12 @@ DropboxMainView = (function(_super) {
         _this.toggle.hide();
       } else {
         _this.installButton.hide();
-        _this.finder.show();
-        _this.toggle.show();
+        if (dbc._lastState === HELPER_FAILED) {
+          _this.loader.show();
+        } else {
+          _this.finder.show();
+          _this.toggle.show();
+        }
       }
       if (dbc._lastState === WAITING_FOR_REGISTER) {
         return dbc.getAuthLink(function(err, link) {
