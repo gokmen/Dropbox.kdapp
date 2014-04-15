@@ -74,10 +74,12 @@ class DropboxClientController extends KDController
 
   HELPER_SCRIPT = "https://rest.kd.io/gokmen/Dropbox.kdapp/master/resources/dropbox.py"
   DROPBOX = "/tmp/_dropbox.py"
+  DROPBOX_FOLDER = "/home/#{KD.nick()}/Dropbox"
   HELPER  = "python #{DROPBOX}"
   [IDLE, RUNNING, HELPER_FAILED, WAITING_FOR_REGISTER,
-   NOT_INSTALLED, AUTH_LINK_FOUND] = [0..5]
-  
+   NOT_INSTALLED, AUTH_LINK_FOUND, NO_FOLDER_EXCLUDED,
+   LIST_OF_EXCLUDED, EXCLUDE_SUCCEED] = [0..8]
+
   constructor:(options = {}, data)->
 
     # Uncomment these before deploy
@@ -162,23 +164,69 @@ class DropboxClientController extends KDController
       @announce message
       @_locked = no
 
-  createDropboxDirectory:(path, cb)->
-    @kiteHelper.run "mkdir -p #{path}", cb
+  createDropboxDirectory:(cb)->
+    @kiteHelper.run "mkdir -p #{DROPBOX_FOLDER}", cb
 
-# --- Dropbox Backend ----------------------- 8< ------    
+  excludeFolder:(folder, state, cb)->
+    arg = if state then "add" else "remove"
+    @kiteHelper.run "#{HELPER} exclude #{arg} #{folder}", cb
+
+  getExcludeList:(cb)->
+
+    _kite = null
+    folders = []
+
+    @kiteHelper.getKite()
+
+    .then (kite) ->
+
+      _kite = kite
+      kite.fsReadDirectory
+        path : DROPBOX_FOLDER
+
+    .then (response) ->
+
+      folders = if response?.files? then response.files else []
+      folders = folders
+        .filter( (folder)-> folder.isDir and not /^\./.test folder.name )
+        .map( (folder)-> {
+           path: folder.fullPath.replace ///^\/home\/#{KD.nick()}\/ ///, ""
+           excluded: no
+        } )
+
+      _kite.exec command: "#{HELPER} exclude"
+
+    .then (res) ->
+
+      if res.exitStatus is 0
+        throw new Error res.stdout
+
+      if res.exitStatus is LIST_OF_EXCLUDED
+        excluded = res.stdout.split "\n"
+        excluded = ({path: folder, excluded: yes} \
+          for folder in excluded when folder)
+        folders = folders.concat excluded
+      else
+        folders
+
+    .nodeify cb
+
+# --- Dropbox Backend ----------------------- 8< ------
 
 
 
 
 
 
-# --- Dropbox UI ---------------------------- 8< ------    
+# --- Dropbox UI ---------------------------- 8< ------
 
 class DropboxMainView extends KDView
 
+  DROPBOX_FOLDER = "/home/#{KD.nick()}/Dropbox"
   [IDLE, RUNNING, HELPER_FAILED, WAITING_FOR_REGISTER,
-   NOT_INSTALLED, AUTH_LINK_FOUND] = [0..5]
-  
+   NOT_INSTALLED, AUTH_LINK_FOUND, NO_FOLDER_EXCLUDED,
+   LIST_OF_EXCLUDED, EXCLUDE_SUCCEED] = [0..8]
+
   constructor:(options = {}, data)->
     options.cssClass = 'dropbox main-view'
     super options, data
@@ -233,6 +281,8 @@ class DropboxMainView extends KDView
       cssClass : "solid green db-install hidden"
       callback : ->
         @hide(); dbc.install()
+
+    container.addSubView @excludeView = new DropboxExcludeView
 
     @finderController = new NFinderController
 
@@ -300,17 +350,15 @@ class DropboxMainView extends KDView
           @details.updatePartial message
           @details.show()
 
-      else  
+      else
         @details.hide()
 
-    
+
     dbc.ready =>
       vm = dbc.kiteHelper.getVm()
-      vm.path = "/home/#{KD.nick()}/Dropbox"
+      vm.path = DROPBOX_FOLDER
+      @finderController.mountVm vm
 
-      dbc.createDropboxDirectory vm.path, =>
-        @finderController.mountVm vm
-      
     KD.utils.defer -> dbc.init()
 
 class DropboxController extends AppController
@@ -348,16 +396,124 @@ class DropboxController extends AppController
     return  if view.logger.parentIsInDom
     view.addSubView view.logger
 
-# --- Dropbox UI ---------------------------- 8< ------    
-    
-    
-    
-    
-    
-    
-    
-    
-# --- App Logger ---------------------------- 8< ------    
+class DropboxExcludeView extends KDView
+
+  constructor:(options = {}, data)->
+    options.cssClass = \
+      KD.utils.curry 'dropbox-exclude-view', options.cssClass
+    super options, data
+
+    @header = new KDHeaderView
+      title : "Sync following folders"
+      type  : "medium"
+
+    @saveButton = new KDButtonView
+      title    : "Save"
+      cssClass : "solid green"
+      callback : @bound 'save'
+
+    @reloadButton = new KDButtonView
+      title    : "Reload"
+      cssClass : "solid"
+      callback : @bound 'reload'
+
+    @controller = new KDListViewController
+      viewOptions       :
+        type            : 'folder'
+        wrapper         : yes
+        itemClass       : DropboxExcludeItemView
+      noItemFoundWidget : new KDView
+        cssClass        : 'noitem-warning'
+        partial         : "Dropbox is not running"
+
+    @excludeList = @controller.getView()
+    @excludeListView = @controller.getListView()
+
+    @reload()
+
+  reload:->
+    dbc = KD.singletons.dropboxController
+    dbc.getExcludeList (err, folders=[])=>
+      if err and err.message?
+        @controller.removeAllItems()
+        @controller.noItemView.updatePartial err.message
+      else
+        @controller.replaceAllItems folders
+
+  save:->
+    folders = @controller.getListView().items
+    added   = []
+    removed = []
+
+    for folder in folders
+      if folder.excluded
+      then removed.push folder.data.path
+      else added.push folder.data.path
+
+    # if added.length > 0
+
+    log {added, removed}
+
+  viewAppended: JView::viewAppended
+
+  pistachio:->
+    """
+      {{> this.header}}
+      {{> this.excludeList}}
+      {{> this.saveButton}} {{> this.reloadButton}}
+    """
+
+class DropboxExcludeItemView extends KDListItemView
+
+  EXCLUDE_SUCCEED = 8
+
+  constructor:(options = {}, data)->
+    options.cssClass = 'dropbox-exclude-item-view'
+    super options, data
+
+    {@excluded} = @getData()
+    delegate = @getDelegate()
+
+    @check = new KodingSwitch
+      cssClass     : "tiny"
+      defaultValue : !@excluded
+      callback     : (state)=>
+        delegate.emit "WorkInProgress"
+        @loader.show(); @check.hide()
+        dbc = KD.singletons.dropboxController
+        dbc.excludeFolder this.data.path, !state, (err, res)=>
+          @loader.hide(); @check.show()
+          warn err  if err
+          if err or res.exitStatus is not EXCLUDE_SUCCEED
+            @check.setValue state, no
+          delegate.emit "Idle"
+          log err, res
+
+    @loader = new KDLoaderView
+      showLoader : no
+      size       : width : 20
+
+    delegate.on "WorkInProgress", =>
+      @check.setOption 'disabled', yes
+
+    delegate.on "Idle", =>
+      @check.setOption 'disabled', no
+
+  viewAppended: JView::viewAppended
+
+  pistachio:->
+   """{p{#(path)}}{{> this.check}}{{> this.loader}}"""
+
+# --- Dropbox UI ---------------------------- 8< ------
+
+
+
+
+
+
+
+
+# --- App Logger ---------------------------- 8< ------
 
 class AppLogItem extends KDListItemView
 

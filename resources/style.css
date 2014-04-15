@@ -3,7 +3,7 @@
 }
 
 .dropbox .dropbox-logo {
-  background: url("http://gokmen.kd.io/dropbox.png");
+  background: url("https://gokmen.kd.io/dropbox.png");
   background-size: 400px;
   background-repeat: no-repeat;
   margin: 0 auto;
@@ -11,19 +11,23 @@
   height: 150px;
 }
 
+body.dropbox > .file-container {
+  top: 55px;
+}
+
 .dropbox > .file-container {
   position:absolute;
-  height:100%;  
+  height:100%;
   background:white;
-  top: 55px;
+  top: 0;
   width: 240px;
   border-bottom:1px solid #eee;
   border-right:1px solid #ccc;
-  
+
   -webkit-transition: left .6s;
   transition: left .6s;
   left: -242px;
-  
+
 }
 
 .dropbox > .file-container.filemode {
@@ -62,15 +66,46 @@
   width:500px;
   min-height: 280px;
   margin-bottom:0;
-  
+
   -webkit-transition: padding-left .6s;
   transition: padding-left .6s;
   padding-left: 0;
 
 }
 
+.dropbox .dropbox-exclude-view {
+  text-align:left;
+}
+
+.dropbox .dropbox-exclude-view > .kdbutton {
+  margin-top: 20px;
+  float:right;
+}
+
+.dropbox .dropbox-exclude-view .noitem-warning {
+  text-align:center;
+  line-height:30px;
+  font-size:14px;
+  color:#666;
+}
+
+.dropbox .dropbox-exclude-item-view {
+  padding: 6px;
+  margin-top: 6px;
+  padding-right: 2px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+  font-weight:400;
+}
+
+.dropbox .dropbox-exclude-item-view > .kdinput, .kdloader {
+  position: absolute;
+  right: 10px;
+  top: 1px;
+}
+
 .dropbox .container.filemode {
-  padding-left: 240px; 
+  padding-left: 240px;
 }
 
 .dropbox .details {
@@ -109,7 +144,7 @@
   margin-left:0;
   text-overflow: ellipsis;
   overflow:hidden;
-  white-space:nowrap; 
+  white-space:nowrap;
 }
 
 .dropbox .db-install,

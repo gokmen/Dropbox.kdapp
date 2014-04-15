@@ -482,7 +482,7 @@ def alias(name):
 def requires_dropbox_running(meth):
 
     def newmeth(*n, **kw):
-        
+
     	if installed() != 1:
             console_print(u"Dropbox is not installed!")
 	    return 4
@@ -835,7 +835,7 @@ Prints out the current status of the Dropbox daemon.
                             #     link = "".join(status).rstrip("\n")
                             #     console_print(u"%s" % link)
 		            waiting = True
-		    if waiting: return 3 
+		    if waiting: return 3
 		return 1
             except KeyError:
                 console_print(u"Couldn't get status: daemon isn't responding")
@@ -959,11 +959,11 @@ Any specified path must be within Dropbox.
                     lines = [relpath(path) for path in dc.get_ignore_set()[u'ignore_set']]
                     lines.sort()
                     if len(lines) == 0:
-                        console_print(u'No directories are being ignored.')
+                        return 6
                     else:
-                        console_print(u'Excluded: ')
                         for line in lines:
                             console_print(unicode(line))
+                        return 7
                 except KeyError:
                     console_print(u"Couldn't get ignore set: daemon isn't responding")
                 except DropboxCommand.CommandError, e:
@@ -993,6 +993,7 @@ Any specified path must be within Dropbox.
                             lines = [relpath(path) for path in result[u"ignored"]]
                             for line in lines:
                                 console_print(unicode(line))
+                            return 8
                     except KeyError:
                         console_print(u"Couldn't add ignore path: daemon isn't responding")
                     except DropboxCommand.CommandError, e:
@@ -1016,6 +1017,7 @@ Any specified path must be within Dropbox.
                             lines = [relpath(path) for path in result[u"removed"]]
                             for line in lines:
                                 console_print(unicode(line))
+                            return 8
                     except KeyError:
                         console_print(u"Couldn't remove ignore path: daemon isn't responding")
                     except DropboxCommand.CommandError, e:
