@@ -125,7 +125,8 @@ div.kdview.dropbox.application-page {
 
 }
 
-.dropbox > .container > .dropbox-exclude-view .dropbox-exclude-item-view .kdinput, .kdloader {
+.dropbox > .container > .dropbox-exclude-view .dropbox-exclude-item-view .kdinput,
+.dropbox > .container > .dropbox-exclude-view .dropbox-exclude-item-view .kdloader {
   position: absolute;
   right: 10px;
   top: 4px;
