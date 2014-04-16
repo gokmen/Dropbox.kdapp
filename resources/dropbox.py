@@ -822,21 +822,15 @@ Prints out the current status of the Dropbox daemon.
     try:
         with closing(DropboxCommand()) as dc:
             try:
-		waiting = False
                 lines = dc.get_dropbox_status()[u'status']
                 if len(lines) == 0:
                     console_print(u'Idle')
                 else:
                     for line in lines:
                         console_print(line)
-                        if line == u"Waiting to be linked to a Dropbox account...":
-                            # status = open("/tmp/_dropbox.out", "r").readlines()[0:2]
-                            # if len(status) > 0:
-                            #     link = "".join(status).rstrip("\n")
-                            #     console_print(u"%s" % link)
-		            waiting = True
-		    if waiting: return 3
-		return 1
+                        if line.startswith(u"Waiting to be link"):
+                            return 3
+                return 1
             except KeyError:
                 console_print(u"Couldn't get status: daemon isn't responding")
             except DropboxCommand.CommandError, e:

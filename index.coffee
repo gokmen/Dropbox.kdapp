@@ -8,7 +8,7 @@ class KiteHelper extends KDController
     new Promise (resolve, reject) =>
 
       {JVM} = KD.remote.api
-      JVM.fetchVms (err, vms)=>
+      JVM.fetchVmsByContext (err, vms)=>
 
         console.warn err  if err
         return unless vms
@@ -82,9 +82,8 @@ class DropboxClientController extends KDController
 
   constructor:(options = {}, data)->
 
-    # Uncomment these before deploy
-    # {dropboxController} = KD.singletons
-    # return dropboxController if dropboxController
+    {dropboxController} = KD.singletons
+    return dropboxController if dropboxController
 
     super options, data
 
@@ -132,7 +131,7 @@ class DropboxClientController extends KDController
   stop:->
 
     @announce "Stoping Dropbox daemon...", yes
-    @kiteHelper.run "#{HELPER} stop", @bound 'updateStatus'
+    @kiteHelper.run "#{HELPER} stop", 10000, @bound 'updateStatus'
 
   getAuthLink:(callback)->
     @kiteHelper.run "#{HELPER} link", (err, res)->
@@ -228,7 +227,7 @@ class DropboxMainView extends KDView
    LIST_OF_EXCLUDED, EXCLUDE_SUCCEED] = [0..8]
 
   constructor:(options = {}, data)->
-    options.cssClass = 'dropbox main-view'
+    options.cssClass = 'dropbox'
     super options, data
 
     new DropboxClientController
@@ -238,7 +237,8 @@ class DropboxMainView extends KDView
   viewAppended:->
 
     dbc = KD.singletons.dropboxController
-
+    
+    # @addSubView @logger
     @addSubView container = new KDView
       cssClass : 'container'
 
@@ -249,8 +249,8 @@ class DropboxMainView extends KDView
       cssClass : 'reload-button hidden'
       iconOnly : yes
       callback : ->
-        dbc.announce "Checking state..."
-        dbc.updateStatus()
+        dbc.announce "Checking state...", yes
+        dbc.updateStatus yes
 
     container.addSubView mcontainer = new KDView
       cssClass : "status-message"
@@ -328,10 +328,10 @@ class DropboxMainView extends KDView
 
       if dbc._lastState in [RUNNING, WAITING_FOR_REGISTER]
         @toggle.setState "Stop Dropbox"
-        if dbc._lastState is RUNNING
-          KD.utils.defer ->
-            KD.utils.killWait dbc._timer
-            dbc._timer = KD.utils.wait 4000, dbc.bound 'updateStatus'
+        # if dbc._lastState is RUNNING
+        #   KD.utils.defer ->
+        #     KD.utils.killWait dbc._timer
+        #     dbc._timer = KD.utils.wait 4000, dbc.bound 'updateStatus'
       else
         @toggle.setState "Start Dropbox"
 
@@ -354,7 +354,7 @@ class DropboxMainView extends KDView
         @finder.hide(); @excludeView.hide()
 
       if dbc._lastState is WAITING_FOR_REGISTER
-
+        
         dbc.getAuthLink (err, link)=>
 
           if err
@@ -365,7 +365,7 @@ class DropboxMainView extends KDView
               Please visit <a href="#{link}" target=_blank>#{link}</a> to link
               your Koding VM with your Dropbox account."""
             KD.utils.wait 2500, dbc.bound 'updateStatus'
-
+          
           @details.updatePartial message
           @details.show()
 

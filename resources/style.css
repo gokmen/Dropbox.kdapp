@@ -1,9 +1,25 @@
-.dropbox.main-view {
+.dropbox {
   background: white;
 }
 
-.dropbox .dropbox-logo {
-  background: url("https://gokmen.kd.io/dropbox.png");
+.dropbox > .container {
+  
+  margin: 60px auto;
+  height: 100%;
+  border:1px solid white;
+  text-align:center;
+  width:500px;
+  min-height: 280px;
+  margin-bottom:0;
+
+  -webkit-transition: padding-left .6s;
+  transition: padding-left .6s;
+  padding-left: 0;
+
+}
+
+.dropbox > .container > .dropbox-logo {
+  background: url("https://rest.kd.io/gokmen/Dropbox.kdapp/master/resources/dropbox.png");
   background-size: 400px;
   background-repeat: no-repeat;
   margin: 0 auto;
@@ -11,8 +27,113 @@
   height: 150px;
 }
 
-body.dropbox > .file-container {
-  top: 55px;
+.dropbox > .container .reload-button {
+  position:absolute;
+  top: 2px;
+  right: 3px;
+  background: url("https://rest.kd.io/gokmen/Dropbox.kdapp/master/resources/refresh-icon.png");
+  background-size:24px;
+  background-repeat:no-repeat;
+  border:none;
+  width:24px;
+  height:24px;
+}
+
+.dropbox > .container > .reload-button {
+  top:158px;
+  z-index:2;
+}
+
+.dropbox > .container > .status-message {
+  border-bottom: 1px solid #eee;
+  text-align:left;
+  padding:5px;
+  height: 30px;
+}
+
+.dropbox > .container > .status-message > .kdloader {
+  top: 10px;
+  right: 15px;
+  position: absolute;
+}
+
+.dropbox > .container > .status-message > .message {
+  float:left;
+  width: 470px;
+  line-height:20px;
+  margin: 5px;
+  margin-left:0;
+  text-overflow: ellipsis;
+  overflow:hidden;
+  white-space:nowrap;
+}
+
+.dropbox > .container > .details {
+  padding: 5px;
+  font-size: 14px;
+  line-height:20px;
+  text-align:left;
+  word-break:break-all;
+  background: #eee;
+  width:490px;
+  height:auto;
+}
+
+.dropbox > .container > .details > cite {
+  color: #016FE5;
+  cursor: pointer;
+}
+
+.dropbox > .container > .db-install,
+.dropbox > .container > .db-toggle {
+  margin: 15px;
+}
+
+.dropbox > .container > .db-toggle > .kdloader {
+  margin-top: 0 !important;
+  margin-left: 0 !important;
+}
+
+.dropbox > .container > .dropbox-exclude-view {
+  text-align:left;
+  margin-top:50px;
+}
+
+.dropbox > .container > .dropbox-exclude-view > .kdheaderview > span {
+  margin-left:5px;
+}
+
+
+.dropbox > .container > .dropbox-exclude-view .noitem-warning {
+  text-align:center;
+  line-height:30px;
+  font-size:14px;
+  color:#666;
+}
+
+.dropbox > .container > .dropbox-exclude-view .dropbox-exclude-item-view {
+  padding: 6px;
+  margin-top: 6px;
+  padding-right: 2px;
+  border-bottom: 1px solid rgba(0,0,0,.04);
+  font-size: 14px;
+  font-weight:400;
+  color:#999;
+}
+.dropbox > .container > .dropbox-exclude-view .dropbox-exclude-item-view:hover {
+  background: rgba(0,0,0,.04);
+
+}
+
+.dropbox > .container > .dropbox-exclude-view .dropbox-exclude-item-view .kdinput, .kdloader {
+  position: absolute;
+  right: 10px;
+  top: 4px;
+}
+
+
+body.dropbox .dropbox > .file-container {
+  top: 55px !important;
 }
 
 .dropbox > .file-container {
@@ -54,135 +175,11 @@ body.dropbox > .file-container {
   background:none;
 }
 
-.dropbox > .file-container .kdlistitemview-finderitem.selected {
-  /* background:rgba(1, 111, 229, 1); */
-}
-
-.dropbox .container {
-  margin: 60px auto;
-  height: 100%;
-  border:1px solid white;
-  text-align:center;
-  width:500px;
-  min-height: 280px;
-  margin-bottom:0;
-
-  -webkit-transition: padding-left .6s;
-  transition: padding-left .6s;
-  padding-left: 0;
-
-}
-
-.dropbox .dropbox-exclude-view {
-  text-align:left;
-  margin-top:50px;
-}
-
-.dropbox .dropbox-exclude-view > .kdheaderview > span {
-  margin-left:5px;
-}
-
-.dropbox .reload-button {
-  position:absolute;
-  top: 2px;
-  right: 3px;
-  background: url("http://gokmen.kd.io/refresh-icon.png");
-  background-size:24px;
-  background-repeat:no-repeat;
-  border:none;
-  width:24px;
-  height:24px;
-}
-
-.dropbox .container > .reload-button {
-  top:158px;
-  z-index:2;
-}
-
-.dropbox .dropbox-exclude-view .noitem-warning {
-  text-align:center;
-  line-height:30px;
-  font-size:14px;
-  color:#666;
-}
-
-.dropbox .dropbox-exclude-item-view {
-  padding: 6px;
-  margin-top: 6px;
-  padding-right: 2px;
-  border-bottom: 1px solid rgba(0,0,0,.04);
-  font-size: 14px;
-  font-weight:400;
-  color:#999;
-}
-.dropbox .dropbox-exclude-item-view:hover {
-  background: rgba(0,0,0,.04);
-
-}
-
-.dropbox .dropbox-exclude-item-view > .kdinput, .kdloader {
-  position: absolute;
-  right: 10px;
-  top: 4px;
-}
-
-.dropbox .container.filemode {
+.dropbox > .container.filemode {
   padding-left: 240px;
 }
 
-.dropbox .details {
-  padding: 5px;
-  font-size: 14px;
-  line-height:20px;
-  text-align:left;
-  word-break:break-all;
-  background: #eee;
-  width:490px;
-}
-
-.dropbox .details > cite {
-  color: #016FE5;
-  cursor: pointer;
-}
-
-.dropbox .status-message {
-  border-bottom: 1px solid #eee;
-  text-align:left;
-  padding:5px;
-  height: 30px;
-}
-
-.dropbox .status-message .kdloader {
-  right: 15px;
-  top: 10px;
-  position: absolute;
-}
-
-.dropbox .status-message .message {
-  float:left;
-  width: 470px;
-  line-height:20px;
-  margin: 5px;
-  margin-left:0;
-  text-overflow: ellipsis;
-  overflow:hidden;
-  white-space:nowrap;
-}
-
-.dropbox .db-install,
-.dropbox .db-toggle {
-  margin: 15px;
-}
-
-.dropbox .status-message .db-toggle > .kdloader {
-  margin-top: 0 !important;
-  margin-left: 0 !important;
-}
-
-
-
-
-.app-logger {
+.dropbox > .app-logger {
   z-index:1;
   width: 100%;
   height: auto;
@@ -192,17 +189,17 @@ body.dropbox > .file-container {
   border-top:1px solid #eee;
 }
 
-.app-logger > .listview-wrapper {
+.dropbox > .app-logger > .listview-wrapper {
   -webkit-transition: height .6s;
   transition: height .6s;
   height: 0;
 }
 
-.app-logger > .listview-wrapper.in {
+.dropbox > .app-logger > .listview-wrapper.in {
   height: 300px;
 }
 
-.app-logger .app-log-item {
+.dropbox > .app-logger .app-log-item {
   border-top: 1px solid #ddd;
   box-sizing:border-box;
   padding:4px;
@@ -210,22 +207,22 @@ body.dropbox > .file-container {
   overflow:auto;
 }
 
-.app-logger .app-log-item:hover {
+.dropbox > .app-logger .app-log-item:hover {
   background: rgba(0,0,0,.01) !important;
 }
 
-.app-logger .app-log-item.log {
+.dropbox > .app-logger .app-log-item.log {
   background: white;
 }
 
-.app-logger .app-log-item.info {
+.dropbox > .app-logger .app-log-item.info {
   background: #daddea;
 }
 
-.app-logger .app-log-item.warn {
+.dropbox > .app-logger .app-log-item.warn {
   background: #f4f2ea;
 }
 
-.app-logger .app-log-item.error {
+.dropbox > .app-logger .app-log-item.error {
   background: #f0e2ec;
 }
