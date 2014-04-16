@@ -2,18 +2,29 @@
   "background": false,
   "behavior": "application",
   "version": "0.1",
-  "title": "Dropbox",
+  "title": "Dropbox for Koding",
   "name": "Dropbox",
   "identifier": "com.koding.apps.dropbox",
   "path": "~/Applications/Dropbox.kdapp",
-  "homepage": "gokmen.lvh.me/dropbox",
-  "repository": "git://github.com/gokmen/dropbox.kdapp.git",
-  "description": "Dropbox : a Koding application created with the blank template.",
+  "homepage": "gokmen.kd.io/dropbox",
+  "repository": "git://github.com/gokmen/Dropbox.kdapp.git",
+  "description": "Dropbox : Dropbox installer for Koding, which allows you to use Dropbox in your Koding VMs.",
   "category": "web-app",
   "source": {
     "blocks": {
       "app": {
         "files": [
+          
+          "./controller/kitehelper.coffee",
+          "./controller/dropbox-client.coffee",
+          
+          "./view/mainview.coffee",
+          "./view/maincontroller.coffee",
+          "./view/excludeitemview.coffee",
+          "./view/excludeview.coffee",
+          "./view/logger/loggeritem.coffee",
+          "./view/logger/logger.coffee",
+          
           "./index.coffee"
         ]
       }
