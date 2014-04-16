@@ -283,6 +283,7 @@ class DropboxMainView extends KDView
         @hide(); dbc.install()
 
     container.addSubView @excludeView = new DropboxExcludeView
+    @excludeView.hide()
 
     @finderController = new NFinderController
 
@@ -326,13 +327,21 @@ class DropboxMainView extends KDView
 
       if dbc._lastState is NOT_INSTALLED
         @installButton.show()
-        @finder.hide()
         @toggle.hide()
       else
         @installButton.hide()
         if dbc._lastState is HELPER_FAILED
         then @loader.show()
-        else @finder.show(); @toggle.show()
+        else @toggle.show()
+
+      if dbc._lastState is RUNNING
+
+        if @excludeView.hasClass 'hidden'
+          KD.utils.wait 2000, @excludeView.bound 'reload'
+
+        @finder.show(); @excludeView.show()
+      else
+        @finder.hide(); @excludeView.hide()
 
       if dbc._lastState is WAITING_FOR_REGISTER
 
@@ -407,11 +416,6 @@ class DropboxExcludeView extends KDView
       title : "Sync following folders"
       type  : "medium"
 
-    @saveButton = new KDButtonView
-      title    : "Save"
-      cssClass : "solid green"
-      callback : @bound 'save'
-
     @reloadButton = new KDButtonView
       title    : "Reload"
       cssClass : "solid"
@@ -440,27 +444,12 @@ class DropboxExcludeView extends KDView
       else
         @controller.replaceAllItems folders
 
-  save:->
-    folders = @controller.getListView().items
-    added   = []
-    removed = []
-
-    for folder in folders
-      if folder.excluded
-      then removed.push folder.data.path
-      else added.push folder.data.path
-
-    # if added.length > 0
-
-    log {added, removed}
-
   viewAppended: JView::viewAppended
 
   pistachio:->
     """
-      {{> this.header}}
+      {{> this.header}} {{> this.reloadButton}}
       {{> this.excludeList}}
-      {{> this.saveButton}} {{> this.reloadButton}}
     """
 
 class DropboxExcludeItemView extends KDListItemView
