@@ -1,4 +1,4 @@
-/* Compiled by kdc on Wed Apr 16 2014 06:24:28 GMT+0000 (UTC) */
+/* Compiled by kdc on Wed Apr 16 2014 19:55:57 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: controller/kitehelper.coffee */
@@ -384,6 +384,14 @@ DropboxMainView = (function(_super) {
     container.addSubView(this.excludeView = new DropboxExcludeView);
     this.excludeView.hide();
     this.finderController = new NFinderController;
+    this.finderController.on("FileNeedsToBeOpened", function(file) {
+      var appManager, router, _ref1;
+      _ref1 = KD.singletons, appManager = _ref1.appManager, router = _ref1.router;
+      appManager.openFile(file);
+      return KD.utils.wait(100, function() {
+        return router.handleRoute("/Ace");
+      });
+    });
     this.finderController.isNodesHiddenFor = function() {
       return true;
     };

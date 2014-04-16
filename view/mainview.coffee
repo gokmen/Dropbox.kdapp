@@ -83,6 +83,11 @@ class DropboxMainView extends KDView
 
     @finderController = new NFinderController
 
+    @finderController.on "FileNeedsToBeOpened", (file) =>
+      {appManager, router} = KD.singletons
+      appManager.openFile file
+      KD.utils.wait 100, -> router.handleRoute "/Ace"
+
     # Temporary fix, until its fixed in upstream ~ GG
     @finderController.isNodesHiddenFor = -> yes
     @addSubView @finder = @finderController.getView()
