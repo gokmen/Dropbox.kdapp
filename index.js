@@ -1,8 +1,8 @@
-/* Compiled by kdc on Sat Apr 12 2014 02:18:30 GMT+0000 (UTC) */
+/* Compiled by kdc on Wed Apr 16 2014 02:55:21 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: index.coffee */
-var AppLogItem, AppLogger, DropboxClientController, DropboxController, DropboxMainView, KiteHelper, _ref,
+var AppLogItem, AppLogger, DropboxClientController, DropboxController, DropboxExcludeItemView, DropboxExcludeView, DropboxMainView, KiteHelper, _ref,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   __slice = [].slice;
@@ -93,7 +93,7 @@ KiteHelper = (function(_super) {
 })(KDController);
 
 DropboxClientController = (function(_super) {
-  var AUTH_LINK_FOUND, DROPBOX, HELPER, HELPER_FAILED, HELPER_SCRIPT, IDLE, NOT_INSTALLED, RUNNING, WAITING_FOR_REGISTER, _ref1;
+  var AUTH_LINK_FOUND, DROPBOX, DROPBOX_FOLDER, EXCLUDE_SUCCEED, HELPER, HELPER_FAILED, HELPER_SCRIPT, IDLE, LIST_OF_EXCLUDED, NOT_INSTALLED, NO_FOLDER_EXCLUDED, RUNNING, WAITING_FOR_REGISTER, _ref1;
 
   __extends(DropboxClientController, _super);
 
@@ -101,17 +101,22 @@ DropboxClientController = (function(_super) {
 
   DROPBOX = "/tmp/_dropbox.py";
 
+  DROPBOX_FOLDER = "/home/" + (KD.nick()) + "/Dropbox";
+
   HELPER = "python " + DROPBOX;
 
-  _ref1 = [0, 1, 2, 3, 4, 5], IDLE = _ref1[0], RUNNING = _ref1[1], HELPER_FAILED = _ref1[2], WAITING_FOR_REGISTER = _ref1[3], NOT_INSTALLED = _ref1[4], AUTH_LINK_FOUND = _ref1[5];
+  _ref1 = [0, 1, 2, 3, 4, 5, 6, 7, 8], IDLE = _ref1[0], RUNNING = _ref1[1], HELPER_FAILED = _ref1[2], WAITING_FOR_REGISTER = _ref1[3], NOT_INSTALLED = _ref1[4], AUTH_LINK_FOUND = _ref1[5], NO_FOLDER_EXCLUDED = _ref1[6], LIST_OF_EXCLUDED = _ref1[7], EXCLUDE_SUCCEED = _ref1[8];
 
   function DropboxClientController(options, data) {
+    var _this = this;
     if (options == null) {
       options = {};
     }
     DropboxClientController.__super__.constructor.call(this, options, data);
     this.kiteHelper = new KiteHelper;
-    this.kiteHelper.ready(this.lazyBound('emit', 'ready'));
+    this.kiteHelper.ready(function() {
+      return _this.createDropboxDirectory(_this.lazyBound('emit', 'ready'));
+    });
     this.registerSingleton("dropboxController", this, true);
   }
 
@@ -208,8 +213,64 @@ DropboxClientController = (function(_super) {
     });
   };
 
-  DropboxClientController.prototype.createDropboxDirectory = function(path, cb) {
-    return this.kiteHelper.run("mkdir -p " + path, cb);
+  DropboxClientController.prototype.createDropboxDirectory = function(cb) {
+    return this.kiteHelper.run("mkdir -p " + DROPBOX_FOLDER, cb);
+  };
+
+  DropboxClientController.prototype.excludeFolder = function(folder, state, cb) {
+    var arg;
+    arg = state ? "add" : "remove";
+    return this.kiteHelper.run("" + HELPER + " exclude " + arg + " " + folder, cb);
+  };
+
+  DropboxClientController.prototype.getExcludeList = function(cb) {
+    var folders, _kite;
+    _kite = null;
+    folders = [];
+    return this.kiteHelper.getKite().then(function(kite) {
+      _kite = kite;
+      return kite.fsReadDirectory({
+        path: DROPBOX_FOLDER
+      });
+    }).then(function(response) {
+      folders = (response != null ? response.files : void 0) != null ? response.files : [];
+      folders = folders.filter(function(folder) {
+        return folder.isDir && !/^\./.test(folder.name);
+      }).map(function(folder) {
+        return {
+          path: folder.fullPath.replace(RegExp("^\\/home\\/" + (KD.nick()) + "\\/"), ""),
+          excluded: false
+        };
+      });
+      return _kite.exec({
+        command: "" + HELPER + " exclude"
+      });
+    }).then(function(res) {
+      var excluded, folder;
+      if (res.exitStatus === 0) {
+        throw new Error(res.stdout);
+      }
+      if (res.exitStatus === LIST_OF_EXCLUDED) {
+        excluded = res.stdout.split("\n");
+        excluded = (function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = excluded.length; _i < _len; _i++) {
+            folder = excluded[_i];
+            if (folder) {
+              _results.push({
+                path: folder,
+                excluded: true
+              });
+            }
+          }
+          return _results;
+        })();
+        return folders = folders.concat(excluded);
+      } else {
+        return folders;
+      }
+    }).nodeify(cb);
   };
 
   return DropboxClientController;
@@ -217,11 +278,13 @@ DropboxClientController = (function(_super) {
 })(KDController);
 
 DropboxMainView = (function(_super) {
-  var AUTH_LINK_FOUND, HELPER_FAILED, IDLE, NOT_INSTALLED, RUNNING, WAITING_FOR_REGISTER, _ref1;
+  var AUTH_LINK_FOUND, DROPBOX_FOLDER, EXCLUDE_SUCCEED, HELPER_FAILED, IDLE, LIST_OF_EXCLUDED, NOT_INSTALLED, NO_FOLDER_EXCLUDED, RUNNING, WAITING_FOR_REGISTER, _ref1;
 
   __extends(DropboxMainView, _super);
 
-  _ref1 = [0, 1, 2, 3, 4, 5], IDLE = _ref1[0], RUNNING = _ref1[1], HELPER_FAILED = _ref1[2], WAITING_FOR_REGISTER = _ref1[3], NOT_INSTALLED = _ref1[4], AUTH_LINK_FOUND = _ref1[5];
+  DROPBOX_FOLDER = "/home/" + (KD.nick()) + "/Dropbox";
+
+  _ref1 = [0, 1, 2, 3, 4, 5, 6, 7, 8], IDLE = _ref1[0], RUNNING = _ref1[1], HELPER_FAILED = _ref1[2], WAITING_FOR_REGISTER = _ref1[3], NOT_INSTALLED = _ref1[4], AUTH_LINK_FOUND = _ref1[5], NO_FOLDER_EXCLUDED = _ref1[6], LIST_OF_EXCLUDED = _ref1[7], EXCLUDE_SUCCEED = _ref1[8];
 
   function DropboxMainView(options, data) {
     if (options == null) {
@@ -242,8 +305,15 @@ DropboxMainView = (function(_super) {
       cssClass: 'container'
     }));
     container.addSubView(new KDView({
-      cssClass: "dropbox-logo",
-      click: dbc.bound('updateStatus')
+      cssClass: "dropbox-logo"
+    }));
+    container.addSubView(this.reloadButton = new KDButtonView({
+      cssClass: 'reload-button hidden',
+      iconOnly: true,
+      callback: function() {
+        dbc.announce("Checking state...");
+        return dbc.updateStatus();
+      }
     }));
     container.addSubView(mcontainer = new KDView({
       cssClass: "status-message"
@@ -283,8 +353,10 @@ DropboxMainView = (function(_super) {
         }, {
           title: "Stop Dropbox",
           callback: function() {
-            this.hide();
-            return dbc.stop();
+            _this.toggle.hide();
+            dbc.stop();
+            _this.excludeView.hide();
+            return _this.finder.hide();
           }
         }
       ]
@@ -297,6 +369,8 @@ DropboxMainView = (function(_super) {
         return dbc.install();
       }
     }));
+    container.addSubView(this.excludeView = new DropboxExcludeView);
+    this.excludeView.hide();
     this.finderController = new NFinderController;
     this.finderController.isNodesHiddenFor = function() {
       return true;
@@ -318,6 +392,7 @@ DropboxMainView = (function(_super) {
     dbc.on("status-update", function(message, busy) {
       var _ref2;
       _this.loader[busy ? "show" : "hide"]();
+      _this.reloadButton[busy ? "hide" : "show"]();
       if (message) {
         _this.message.updatePartial(message);
       }
@@ -344,16 +419,24 @@ DropboxMainView = (function(_super) {
       }
       if (dbc._lastState === NOT_INSTALLED) {
         _this.installButton.show();
-        _this.finder.hide();
         _this.toggle.hide();
       } else {
         _this.installButton.hide();
         if (dbc._lastState === HELPER_FAILED) {
           _this.loader.show();
         } else {
-          _this.finder.show();
           _this.toggle.show();
         }
+      }
+      if (dbc._lastState === RUNNING) {
+        if (_this.excludeView.hasClass('hidden')) {
+          KD.utils.wait(2000, _this.excludeView.bound('reload'));
+        }
+        _this.finder.show();
+        _this.excludeView.show();
+      } else {
+        _this.finder.hide();
+        _this.excludeView.hide();
       }
       if (dbc._lastState === WAITING_FOR_REGISTER) {
         return dbc.getAuthLink(function(err, link) {
@@ -374,10 +457,8 @@ DropboxMainView = (function(_super) {
     dbc.ready(function() {
       var vm;
       vm = dbc.kiteHelper.getVm();
-      vm.path = "/home/" + (KD.nick()) + "/Dropbox";
-      return dbc.createDropboxDirectory(vm.path, function() {
-        return _this.finderController.mountVm(vm);
-      });
+      vm.path = DROPBOX_FOLDER;
+      return _this.finderController.mountVm(vm);
     });
     return KD.utils.defer(function() {
       return dbc.init();
@@ -437,6 +518,130 @@ DropboxController = (function(_super) {
   return DropboxController;
 
 })(AppController);
+
+DropboxExcludeView = (function(_super) {
+  __extends(DropboxExcludeView, _super);
+
+  function DropboxExcludeView(options, data) {
+    if (options == null) {
+      options = {};
+    }
+    options.cssClass = KD.utils.curry('dropbox-exclude-view', options.cssClass);
+    DropboxExcludeView.__super__.constructor.call(this, options, data);
+    this.header = new KDHeaderView({
+      title: "Sync following folders",
+      type: "medium"
+    });
+    this.reloadButton = new KDButtonView({
+      callback: this.bound('reload'),
+      iconOnly: true,
+      cssClass: "reload-button"
+    });
+    this.controller = new KDListViewController({
+      viewOptions: {
+        type: 'folder',
+        wrapper: true,
+        itemClass: DropboxExcludeItemView
+      },
+      noItemFoundWidget: new KDView({
+        cssClass: 'noitem-warning',
+        partial: "Dropbox is not running"
+      })
+    });
+    this.excludeList = this.controller.getView();
+    this.excludeListView = this.controller.getListView();
+    this.reload();
+  }
+
+  DropboxExcludeView.prototype.reload = function() {
+    var dbc,
+      _this = this;
+    dbc = KD.singletons.dropboxController;
+    return dbc.getExcludeList(function(err, folders) {
+      if (folders == null) {
+        folders = [];
+      }
+      if (err && (err.message != null)) {
+        _this.controller.removeAllItems();
+        return _this.controller.noItemView.updatePartial(err.message);
+      } else {
+        return _this.controller.replaceAllItems(folders);
+      }
+    });
+  };
+
+  DropboxExcludeView.prototype.viewAppended = JView.prototype.viewAppended;
+
+  DropboxExcludeView.prototype.pistachio = function() {
+    return "{{> this.header}} {{> this.reloadButton}}\n{{> this.excludeList}}";
+  };
+
+  return DropboxExcludeView;
+
+})(KDView);
+
+DropboxExcludeItemView = (function(_super) {
+  var EXCLUDE_SUCCEED;
+
+  __extends(DropboxExcludeItemView, _super);
+
+  EXCLUDE_SUCCEED = 8;
+
+  function DropboxExcludeItemView(options, data) {
+    var delegate,
+      _this = this;
+    if (options == null) {
+      options = {};
+    }
+    options.cssClass = 'dropbox-exclude-item-view';
+    DropboxExcludeItemView.__super__.constructor.call(this, options, data);
+    this.excluded = this.getData().excluded;
+    delegate = this.getDelegate();
+    this.check = new KodingSwitch({
+      cssClass: "tiny",
+      defaultValue: !this.excluded,
+      callback: function(state) {
+        var dbc;
+        delegate.emit("WorkInProgress");
+        _this.loader.show();
+        _this.check.hide();
+        dbc = KD.singletons.dropboxController;
+        return dbc.excludeFolder(_this.data.path, !state, function(err, res) {
+          _this.loader.hide();
+          _this.check.show();
+          if (err) {
+            warn(err);
+          }
+          if (err || res.exitStatus === !EXCLUDE_SUCCEED) {
+            _this.check.setValue(state, false);
+          }
+          return delegate.emit("Idle");
+        });
+      }
+    });
+    this.loader = new KDLoaderView({
+      showLoader: false,
+      size: {
+        width: 20
+      }
+    });
+    delegate.on("WorkInProgress", function() {
+      return _this.check.setOption('disabled', true);
+    });
+    delegate.on("Idle", function() {
+      return _this.check.setOption('disabled', false);
+    });
+  }
+
+  DropboxExcludeItemView.prototype.viewAppended = JView.prototype.viewAppended;
+
+  DropboxExcludeItemView.prototype.pistachio = function() {
+    return "{p{#(path)}}{{> this.check}}{{> this.loader}}";
+  };
+
+  return DropboxExcludeItemView;
+
+})(KDListItemView);
 
 AppLogItem = (function(_super) {
   __extends(AppLogItem, _super);
