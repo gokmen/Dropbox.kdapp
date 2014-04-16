@@ -244,7 +244,13 @@ class DropboxMainView extends KDView
 
     container.addSubView new KDView
       cssClass : "dropbox-logo"
-      click : dbc.bound 'updateStatus'
+
+    container.addSubView @reloadButton = new KDButtonView
+      cssClass : 'reload-button hidden'
+      iconOnly : yes
+      callback : ->
+        dbc.announce "Checking state..."
+        dbc.updateStatus()
 
     container.addSubView mcontainer = new KDView
       cssClass : "status-message"
@@ -273,7 +279,9 @@ class DropboxMainView extends KDView
         callback   : -> this.hide(); dbc.start()
       ,
         title      : "Stop Dropbox"
-        callback   : -> this.hide(); dbc.stop()
+        callback   : =>
+          @toggle.hide(); dbc.stop();
+          @excludeView.hide(); @finder.hide()
       ]
 
     container.addSubView @installButton = new KDButtonView
@@ -305,6 +313,8 @@ class DropboxMainView extends KDView
     dbc.on "status-update", (message, busy)=>
 
       @loader[if busy then "show" else "hide"]()
+      @reloadButton[if busy then "hide" else "show"]()
+
       @message.updatePartial message  if message
 
       if message
@@ -417,9 +427,9 @@ class DropboxExcludeView extends KDView
       type  : "medium"
 
     @reloadButton = new KDButtonView
-      title    : "Reload"
-      cssClass : "solid"
       callback : @bound 'reload'
+      iconOnly : yes
+      cssClass : "reload-button"
 
     @controller = new KDListViewController
       viewOptions       :
@@ -476,7 +486,6 @@ class DropboxExcludeItemView extends KDListItemView
           if err or res.exitStatus is not EXCLUDE_SUCCEED
             @check.setValue state, no
           delegate.emit "Idle"
-          log err, res
 
     @loader = new KDLoaderView
       showLoader : no

@@ -60,7 +60,7 @@ body.dropbox > .file-container {
 
 .dropbox .container {
   margin: 60px auto;
-  height: auto;
+  height: 100%;
   border:1px solid white;
   text-align:center;
   width:500px;
@@ -75,11 +75,28 @@ body.dropbox > .file-container {
 
 .dropbox .dropbox-exclude-view {
   text-align:left;
+  margin-top:50px;
 }
 
-.dropbox .dropbox-exclude-view > .kdbutton {
-  margin-top: 20px;
-  float:right;
+.dropbox .dropbox-exclude-view > .kdheaderview > span {
+  margin-left:5px;
+}
+
+.dropbox .reload-button {
+  position:absolute;
+  top: 2px;
+  right: 3px;
+  background: url("http://gokmen.kd.io/refresh-icon.png");
+  background-size:24px;
+  background-repeat:no-repeat;
+  border:none;
+  width:24px;
+  height:24px;
+}
+
+.dropbox .container > .reload-button {
+  top:158px;
+  z-index:2;
 }
 
 .dropbox .dropbox-exclude-view .noitem-warning {
@@ -93,15 +110,20 @@ body.dropbox > .file-container {
   padding: 6px;
   margin-top: 6px;
   padding-right: 2px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid rgba(0,0,0,.04);
   font-size: 14px;
   font-weight:400;
+  color:#999;
+}
+.dropbox .dropbox-exclude-item-view:hover {
+  background: rgba(0,0,0,.04);
+
 }
 
 .dropbox .dropbox-exclude-item-view > .kdinput, .kdloader {
   position: absolute;
   right: 10px;
-  top: 1px;
+  top: 4px;
 }
 
 .dropbox .container.filemode {
@@ -156,6 +178,8 @@ body.dropbox > .file-container {
   margin-top: 0 !important;
   margin-left: 0 !important;
 }
+
+
 
 
 .app-logger {
