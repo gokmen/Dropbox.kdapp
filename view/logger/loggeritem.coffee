@@ -9,11 +9,11 @@
 
 class AppLogItem extends KDListItemView
 
+  JView.mixin @prototype
+  
   constructor:(options = {}, data)->
     options.cssClass = "app-log-item #{options.type}"
     super options, data
-
-  viewAppended: JView::viewAppended
 
   pistachio:->
 

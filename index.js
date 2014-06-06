@@ -1,7 +1,7 @@
-/* Compiled by kdc on Wed Apr 16 2014 19:55:57 GMT+0000 (UTC) */
+/* Compiled by kdc on Fri Jun 06 2014 22:21:41 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
-/* BLOCK STARTS: controller/kitehelper.coffee */
+/* BLOCK STARTS: /home/gokmen/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
 var KiteHelper, _ref,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -90,7 +90,7 @@ KiteHelper = (function(_super) {
   return KiteHelper;
 
 })(KDController);
-/* BLOCK STARTS: controller/dropbox-client.coffee */
+/* BLOCK STARTS: /home/gokmen/Applications/Dropbox.kdapp/controller/dropbox-client.coffee */
 var DropboxClientController,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -284,7 +284,7 @@ DropboxClientController = (function(_super) {
   return DropboxClientController;
 
 })(KDController);
-/* BLOCK STARTS: view/mainview.coffee */
+/* BLOCK STARTS: /home/gokmen/Applications/Dropbox.kdapp/view/mainview.coffee */
 var DropboxMainView,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -482,7 +482,7 @@ DropboxMainView = (function(_super) {
   return DropboxMainView;
 
 })(KDView);
-/* BLOCK STARTS: view/maincontroller.coffee */
+/* BLOCK STARTS: /home/gokmen/Applications/Dropbox.kdapp/view/maincontroller.coffee */
 var DropboxController,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -536,7 +536,7 @@ DropboxController = (function(_super) {
   return DropboxController;
 
 })(AppController);
-/* BLOCK STARTS: view/excludeitemview.coffee */
+/* BLOCK STARTS: /home/gokmen/Applications/Dropbox.kdapp/view/excludeitemview.coffee */
 var DropboxExcludeItemView,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -547,6 +547,8 @@ DropboxExcludeItemView = (function(_super) {
   __extends(DropboxExcludeItemView, _super);
 
   EXCLUDE_SUCCEED = 8;
+
+  JView.mixin(DropboxExcludeItemView.prototype);
 
   function DropboxExcludeItemView(options, data) {
     var delegate,
@@ -594,8 +596,6 @@ DropboxExcludeItemView = (function(_super) {
     });
   }
 
-  DropboxExcludeItemView.prototype.viewAppended = JView.prototype.viewAppended;
-
   DropboxExcludeItemView.prototype.pistachio = function() {
     return "{p{#(path)}}{{> this.check}}{{> this.loader}}";
   };
@@ -603,13 +603,15 @@ DropboxExcludeItemView = (function(_super) {
   return DropboxExcludeItemView;
 
 })(KDListItemView);
-/* BLOCK STARTS: view/excludeview.coffee */
+/* BLOCK STARTS: /home/gokmen/Applications/Dropbox.kdapp/view/excludeview.coffee */
 var DropboxExcludeView,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
 DropboxExcludeView = (function(_super) {
   __extends(DropboxExcludeView, _super);
+
+  JView.mixin(DropboxExcludeView.prototype);
 
   function DropboxExcludeView(options, data) {
     if (options == null) {
@@ -659,8 +661,6 @@ DropboxExcludeView = (function(_super) {
     });
   };
 
-  DropboxExcludeView.prototype.viewAppended = JView.prototype.viewAppended;
-
   DropboxExcludeView.prototype.pistachio = function() {
     return "{{> this.header}} {{> this.reloadButton}}\n{{> this.excludeList}}";
   };
@@ -668,13 +668,15 @@ DropboxExcludeView = (function(_super) {
   return DropboxExcludeView;
 
 })(KDView);
-/* BLOCK STARTS: view/logger/loggeritem.coffee */
+/* BLOCK STARTS: /home/gokmen/Applications/Dropbox.kdapp/view/logger/loggeritem.coffee */
 var AppLogItem,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
 AppLogItem = (function(_super) {
   __extends(AppLogItem, _super);
+
+  JView.mixin(AppLogItem.prototype);
 
   function AppLogItem(options, data) {
     if (options == null) {
@@ -683,8 +685,6 @@ AppLogItem = (function(_super) {
     options.cssClass = "app-log-item " + options.type;
     AppLogItem.__super__.constructor.call(this, options, data);
   }
-
-  AppLogItem.prototype.viewAppended = JView.prototype.viewAppended;
 
   AppLogItem.prototype.pistachio = function() {
     var content, message, part, _i, _len;
@@ -703,7 +703,7 @@ AppLogItem = (function(_super) {
   return AppLogItem;
 
 })(KDListItemView);
-/* BLOCK STARTS: view/logger/logger.coffee */
+/* BLOCK STARTS: /home/gokmen/Applications/Dropbox.kdapp/view/logger/logger.coffee */
 var AppLogger,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -761,7 +761,7 @@ AppLogger = (function(_super) {
   return AppLogger;
 
 })(KDView);
-/* BLOCK STARTS: index.coffee */
+/* BLOCK STARTS: /home/gokmen/Applications/Dropbox.kdapp/index.coffee */
 (function() {
   var view;
   if (typeof appView !== "undefined" && appView !== null) {

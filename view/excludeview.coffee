@@ -9,6 +9,8 @@
 
 class DropboxExcludeView extends KDView
 
+  JView.mixin @prototype
+  
   constructor:(options = {}, data)->
     options.cssClass = \
       KD.utils.curry 'dropbox-exclude-view', options.cssClass
@@ -45,8 +47,6 @@ class DropboxExcludeView extends KDView
         @controller.noItemView.updatePartial err.message
       else
         @controller.replaceAllItems folders
-
-  viewAppended: JView::viewAppended
 
   pistachio:->
     """

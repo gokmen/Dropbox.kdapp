@@ -10,7 +10,8 @@
 class DropboxExcludeItemView extends KDListItemView
 
   EXCLUDE_SUCCEED = 8
-
+  JView.mixin @prototype
+  
   constructor:(options = {}, data)->
     options.cssClass = 'dropbox-exclude-item-view'
     super options, data
@@ -41,8 +42,6 @@ class DropboxExcludeItemView extends KDListItemView
 
     delegate.on "Idle", =>
       @check.setOption 'disabled', no
-
-  viewAppended: JView::viewAppended
 
   pistachio:->
    """{p{#(path)}}{{> this.check}}{{> this.loader}}"""
