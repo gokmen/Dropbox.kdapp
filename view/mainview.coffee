@@ -155,10 +155,6 @@ class DropboxMainView extends KDView
 
       else
         @details.hide()
-        
-      if dbc._previousLastState is WAITING_FOR_REGISTER and dbc._lastState is RUNNING
-        dbc.excludeButKoding()
-
 
     dbc.ready =>
       vm = dbc.kiteHelper.getVm()

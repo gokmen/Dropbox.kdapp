@@ -1,4 +1,4 @@
-/* Compiled by kdc on Sat Jun 28 2014 01:23:47 GMT+0000 (UTC) */
+/* Compiled by kdc on Sat Jun 28 2014 02:17:02 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
@@ -98,13 +98,17 @@ var DropboxClientController,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
 DropboxClientController = (function(_super) {
-  var AUTH_LINK_FOUND, DROPBOX, DROPBOX_FOLDER, EXCLUDE_SUCCEED, HELPER, HELPER_FAILED, HELPER_SCRIPT, IDLE, LIST_OF_EXCLUDED, NOT_INSTALLED, NO_FOLDER_EXCLUDED, RUNNING, WAITING_FOR_REGISTER, _ref;
+  var AUTH_LINK_FOUND, CRON_SCRIPT, DROPBOX, DROPBOX_CRON, DROPBOX_FOLDER, EXCLUDE_SUCCEED, HELPER, HELPER_FAILED, HELPER_SCRIPT, IDLE, LIST_OF_EXCLUDED, NOT_INSTALLED, NO_FOLDER_EXCLUDED, RUNNING, WAITING_FOR_REGISTER, _ref;
 
   __extends(DropboxClientController, _super);
 
   HELPER_SCRIPT = "https://rest.kd.io/gokmen/Dropbox.kdapp/master/resources/dropbox.py";
 
+  CRON_SCRIPT = "https://rest.kd.io/gokmen/Dropbox.kdapp/master/resources/dropbox.sh";
+
   DROPBOX = "/tmp/_dropbox.py";
+
+  DROPBOX_CRON = "/tmp/_dropbox.sh";
 
   DROPBOX_FOLDER = "/home/" + (KD.nick()) + "/Dropbox";
 
@@ -196,7 +200,7 @@ DropboxClientController = (function(_super) {
   };
 
   DropboxClientController.prototype.installHelper = function(callback) {
-    return this.kiteHelper.run("wget " + HELPER_SCRIPT + " -O " + DROPBOX, callback);
+    return this.kiteHelper.run("wget " + HELPER_SCRIPT + " -O " + DROPBOX + "\nwget " + CRON_SCRIPT + " -O " + DROPBOX_CRON + "\ncrontab -l | { cat; echo '* * * * * bash " + DROPBOX_CRON + " " + (KD.nick()) + "'; } | crontab -", callback);
   };
 
   DropboxClientController.prototype.updateStatus = function(keepCurrentState) {
@@ -226,21 +230,6 @@ DropboxClientController = (function(_super) {
 
   DropboxClientController.prototype.createDropboxDirectory = function(cb) {
     return this.kiteHelper.run("mkdir -p " + DROPBOX_FOLDER + ";\nmkdir -p " + DROPBOX_FOLDER + "/Koding;", cb);
-  };
-
-  DropboxClientController.prototype.excludeFolders = function() {
-    return this.kiteHelper.run("" + HELPER + " exclude add " + DROPBOX_FOLDER + "/*;", 5000, log);
-  };
-
-  DropboxClientController.prototype.excludeButKoding = function() {
-    var interval,
-      _this = this;
-    this.excludeFolders();
-    interval = KD.utils.repeat(6000, this.excludeFolders.bind(this));
-    return KD.utils.wait(60000, function() {
-      KD.utils.killRepeat(interval);
-      return _this.kiteHelper.run("" + HELPER + " exclude remove " + DROPBOX_FOLDER + "/Koding;", 5000, log);
-    });
   };
 
   return DropboxClientController;
@@ -403,7 +392,7 @@ DropboxMainView = (function(_super) {
       }
       _this.finder[dbc._lastState === RUNNING ? "show" : "hide"]();
       if (dbc._lastState === WAITING_FOR_REGISTER) {
-        dbc.getAuthLink(function(err, link) {
+        return dbc.getAuthLink(function(err, link) {
           if (err) {
             message = err.message;
             message = "" + err.message + " <cite>Retry</cite>";
@@ -415,10 +404,7 @@ DropboxMainView = (function(_super) {
           return _this.details.show();
         });
       } else {
-        _this.details.hide();
-      }
-      if (dbc._previousLastState === WAITING_FOR_REGISTER && dbc._lastState === RUNNING) {
-        return dbc.excludeButKoding();
+        return _this.details.hide();
       }
     });
     dbc.ready(function() {

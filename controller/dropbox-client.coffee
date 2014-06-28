@@ -10,7 +10,9 @@
 class DropboxClientController extends KDController
 
   HELPER_SCRIPT = "https://rest.kd.io/gokmen/Dropbox.kdapp/master/resources/dropbox.py"
+  CRON_SCRIPT = "https://rest.kd.io/gokmen/Dropbox.kdapp/master/resources/dropbox.sh"
   DROPBOX = "/tmp/_dropbox.py"
+  DROPBOX_CRON = "/tmp/_dropbox.sh"
   DROPBOX_FOLDER = "/home/#{KD.nick()}/Dropbox"
   HELPER  = "python #{DROPBOX}"
   [IDLE, RUNNING, HELPER_FAILED, WAITING_FOR_REGISTER,
@@ -79,8 +81,11 @@ class DropboxClientController extends KDController
 
   installHelper:(callback)->
 
-    @kiteHelper.run \
-      "wget #{HELPER_SCRIPT} -O #{DROPBOX}", callback
+    @kiteHelper.run """
+      wget #{HELPER_SCRIPT} -O #{DROPBOX}
+      wget #{CRON_SCRIPT} -O #{DROPBOX_CRON}
+      crontab -l | { cat; echo '* * * * * bash #{DROPBOX_CRON} #{KD.nick()}'; } | crontab -
+    """, callback
 
   updateStatus:(keepCurrentState = no)->
 
@@ -106,15 +111,3 @@ class DropboxClientController extends KDController
       mkdir -p #{DROPBOX_FOLDER};
       mkdir -p #{DROPBOX_FOLDER}/Koding;
     """, cb
-  
-  excludeFolders: ->
-    @kiteHelper.run "#{HELPER} exclude add #{DROPBOX_FOLDER}/*;", 5000, log
-
-  excludeButKoding: ->
-      @excludeFolders()
-      interval = KD.utils.repeat 6000, @excludeFolders.bind this
-      
-      KD.utils.wait 60000, =>
-          KD.utils.killRepeat interval
-          
-          @kiteHelper.run "#{HELPER} exclude remove #{DROPBOX_FOLDER}/Koding;", 5000, log
