@@ -63,6 +63,7 @@ class KiteHelper extends KDController
       .then (result)->
         callback null, result
     .catch (err)->
-      callback
-        message : "Failed to run #{cmd}"
-        details : err
+      if callback
+        callback
+          message : "Failed to run #{cmd}"
+          details : err

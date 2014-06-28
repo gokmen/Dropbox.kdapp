@@ -61,10 +61,10 @@ class DropboxClientController extends KDController
           @announce "Dropbox installed successfully, you can start the daemon now"
 
   start:->
-
+ 
     @announce "Starting Dropbox daemon...", yes
-    @kiteHelper.run "#{HELPER} start", 7000, @bound 'updateStatus'
-
+    @kiteHelper.run "#{HELPER} start;", 10000, @bound 'updateStatus'
+    
   stop:->
 
     @announce "Stoping Dropbox daemon...", yes
@@ -95,54 +95,26 @@ class DropboxClientController extends KDController
 
       unless err
         message = res.stdout
+        @_previousLastState = @_lastState
         @_lastState = res.exitStatus
 
       @announce message
       @_locked = no
 
   createDropboxDirectory:(cb)->
-    @kiteHelper.run "mkdir -p #{DROPBOX_FOLDER}", cb
+    @kiteHelper.run """
+      mkdir -p #{DROPBOX_FOLDER};
+      mkdir -p #{DROPBOX_FOLDER}/Koding;
+    """, cb
+  
+  excludeFolders: ->
+    @kiteHelper.run "#{HELPER} exclude add #{DROPBOX_FOLDER}/*;", 5000, log
 
-  excludeFolder:(folder, state, cb)->
-    arg = if state then "add" else "remove"
-    @kiteHelper.run "#{HELPER} exclude #{arg} #{folder}", cb
-
-  getExcludeList:(cb)->
-
-    _kite = null
-    folders = []
-
-    @kiteHelper.getKite()
-
-    .then (kite) ->
-
-      _kite = kite
-      kite.fsReadDirectory
-        path : DROPBOX_FOLDER
-
-    .then (response) ->
-
-      folders = if response?.files? then response.files else []
-      folders = folders
-        .filter( (folder)-> folder.isDir and not /^\./.test folder.name )
-        .map( (folder)-> {
-           path: folder.fullPath.replace ///^\/home\/#{KD.nick()}\/ ///, ""
-           excluded: no
-        } )
-
-      _kite.exec command: "#{HELPER} exclude"
-
-    .then (res) ->
-
-      if res.exitStatus is 0
-        throw new Error res.stdout
-
-      if res.exitStatus is LIST_OF_EXCLUDED
-        excluded = res.stdout.split "\n"
-        excluded = ({path: folder, excluded: yes} \
-          for folder in excluded when folder)
-        folders = folders.concat excluded
-      else
-        folders
-
-    .nodeify cb
+  excludeButKoding: ->
+      @excludeFolders()
+      interval = KD.utils.repeat 6000, @excludeFolders.bind this
+      
+      KD.utils.wait 60000, =>
+          KD.utils.killRepeat interval
+          
+          @kiteHelper.run "#{HELPER} exclude remove #{DROPBOX_FOLDER}/Koding;", 5000, log

@@ -69,7 +69,7 @@ class DropboxMainView extends KDView
         title      : "Stop Dropbox"
         callback   : =>
           @toggle.hide(); dbc.stop();
-          @excludeView.hide(); @finder.hide()
+          @finder.hide()
       ]
 
     container.addSubView @installButton = new KDButtonView
@@ -78,8 +78,6 @@ class DropboxMainView extends KDView
       callback : ->
         @hide(); dbc.install()
 
-    container.addSubView @excludeView = new DropboxExcludeView
-    @excludeView.hide()
 
     @finderController = new NFinderController
 
@@ -137,14 +135,7 @@ class DropboxMainView extends KDView
         then @loader.show()
         else @toggle.show()
 
-      if dbc._lastState is RUNNING
-
-        if @excludeView.hasClass 'hidden'
-          KD.utils.wait 2000, @excludeView.bound 'reload'
-
-        @finder.show(); @excludeView.show()
-      else
-        @finder.hide(); @excludeView.hide()
+      @finder[if dbc._lastState is RUNNING then "show" else "hide"]()
 
       if dbc._lastState is WAITING_FOR_REGISTER
         
@@ -164,11 +155,14 @@ class DropboxMainView extends KDView
 
       else
         @details.hide()
+        
+      if dbc._previousLastState is WAITING_FOR_REGISTER and dbc._lastState is RUNNING
+        dbc.excludeButKoding()
 
 
     dbc.ready =>
       vm = dbc.kiteHelper.getVm()
-      vm.path = DROPBOX_FOLDER
+      vm.path = DROPBOX_FOLDER + "/Koding"
       @finderController.mountVm vm
 
     KD.utils.defer -> dbc.init()

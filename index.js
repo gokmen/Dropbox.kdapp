@@ -1,7 +1,7 @@
-/* Compiled by kdc on Fri Jun 06 2014 22:21:41 GMT+0000 (UTC) */
+/* Compiled by kdc on Sat Jun 28 2014 01:23:47 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
-/* BLOCK STARTS: /home/gokmen/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
+/* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
 var KiteHelper, _ref,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -80,17 +80,19 @@ KiteHelper = (function(_super) {
         return callback(null, result);
       });
     })["catch"](function(err) {
-      return callback({
-        message: "Failed to run " + cmd,
-        details: err
-      });
+      if (callback) {
+        return callback({
+          message: "Failed to run " + cmd,
+          details: err
+        });
+      }
     });
   };
 
   return KiteHelper;
 
 })(KDController);
-/* BLOCK STARTS: /home/gokmen/Applications/Dropbox.kdapp/controller/dropbox-client.coffee */
+/* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/dropbox-client.coffee */
 var DropboxClientController,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -173,7 +175,7 @@ DropboxClientController = (function(_super) {
 
   DropboxClientController.prototype.start = function() {
     this.announce("Starting Dropbox daemon...", true);
-    return this.kiteHelper.run("" + HELPER + " start", 7000, this.bound('updateStatus'));
+    return this.kiteHelper.run("" + HELPER + " start;", 10000, this.bound('updateStatus'));
   };
 
   DropboxClientController.prototype.stop = function() {
@@ -214,6 +216,7 @@ DropboxClientController = (function(_super) {
       message = "Failed to fetch state.";
       if (!err) {
         message = res.stdout;
+        _this._previousLastState = _this._lastState;
         _this._lastState = res.exitStatus;
       }
       _this.announce(message);
@@ -222,69 +225,28 @@ DropboxClientController = (function(_super) {
   };
 
   DropboxClientController.prototype.createDropboxDirectory = function(cb) {
-    return this.kiteHelper.run("mkdir -p " + DROPBOX_FOLDER, cb);
+    return this.kiteHelper.run("mkdir -p " + DROPBOX_FOLDER + ";\nmkdir -p " + DROPBOX_FOLDER + "/Koding;", cb);
   };
 
-  DropboxClientController.prototype.excludeFolder = function(folder, state, cb) {
-    var arg;
-    arg = state ? "add" : "remove";
-    return this.kiteHelper.run("" + HELPER + " exclude " + arg + " " + folder, cb);
+  DropboxClientController.prototype.excludeFolders = function() {
+    return this.kiteHelper.run("" + HELPER + " exclude add " + DROPBOX_FOLDER + "/*;", 5000, log);
   };
 
-  DropboxClientController.prototype.getExcludeList = function(cb) {
-    var folders, _kite;
-    _kite = null;
-    folders = [];
-    return this.kiteHelper.getKite().then(function(kite) {
-      _kite = kite;
-      return kite.fsReadDirectory({
-        path: DROPBOX_FOLDER
-      });
-    }).then(function(response) {
-      folders = (response != null ? response.files : void 0) != null ? response.files : [];
-      folders = folders.filter(function(folder) {
-        return folder.isDir && !/^\./.test(folder.name);
-      }).map(function(folder) {
-        return {
-          path: folder.fullPath.replace(RegExp("^\\/home\\/" + (KD.nick()) + "\\/"), ""),
-          excluded: false
-        };
-      });
-      return _kite.exec({
-        command: "" + HELPER + " exclude"
-      });
-    }).then(function(res) {
-      var excluded, folder;
-      if (res.exitStatus === 0) {
-        throw new Error(res.stdout);
-      }
-      if (res.exitStatus === LIST_OF_EXCLUDED) {
-        excluded = res.stdout.split("\n");
-        excluded = (function() {
-          var _i, _len, _results;
-          _results = [];
-          for (_i = 0, _len = excluded.length; _i < _len; _i++) {
-            folder = excluded[_i];
-            if (folder) {
-              _results.push({
-                path: folder,
-                excluded: true
-              });
-            }
-          }
-          return _results;
-        })();
-        return folders = folders.concat(excluded);
-      } else {
-        return folders;
-      }
-    }).nodeify(cb);
+  DropboxClientController.prototype.excludeButKoding = function() {
+    var interval,
+      _this = this;
+    this.excludeFolders();
+    interval = KD.utils.repeat(6000, this.excludeFolders.bind(this));
+    return KD.utils.wait(60000, function() {
+      KD.utils.killRepeat(interval);
+      return _this.kiteHelper.run("" + HELPER + " exclude remove " + DROPBOX_FOLDER + "/Koding;", 5000, log);
+    });
   };
 
   return DropboxClientController;
 
 })(KDController);
-/* BLOCK STARTS: /home/gokmen/Applications/Dropbox.kdapp/view/mainview.coffee */
+/* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/view/mainview.coffee */
 var DropboxMainView,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -367,7 +329,6 @@ DropboxMainView = (function(_super) {
           callback: function() {
             _this.toggle.hide();
             dbc.stop();
-            _this.excludeView.hide();
             return _this.finder.hide();
           }
         }
@@ -381,8 +342,6 @@ DropboxMainView = (function(_super) {
         return dbc.install();
       }
     }));
-    container.addSubView(this.excludeView = new DropboxExcludeView);
-    this.excludeView.hide();
     this.finderController = new NFinderController;
     this.finderController.on("FileNeedsToBeOpened", function(file) {
       var appManager, router, _ref1;
@@ -442,18 +401,9 @@ DropboxMainView = (function(_super) {
           _this.toggle.show();
         }
       }
-      if (dbc._lastState === RUNNING) {
-        if (_this.excludeView.hasClass('hidden')) {
-          KD.utils.wait(2000, _this.excludeView.bound('reload'));
-        }
-        _this.finder.show();
-        _this.excludeView.show();
-      } else {
-        _this.finder.hide();
-        _this.excludeView.hide();
-      }
+      _this.finder[dbc._lastState === RUNNING ? "show" : "hide"]();
       if (dbc._lastState === WAITING_FOR_REGISTER) {
-        return dbc.getAuthLink(function(err, link) {
+        dbc.getAuthLink(function(err, link) {
           if (err) {
             message = err.message;
             message = "" + err.message + " <cite>Retry</cite>";
@@ -465,13 +415,16 @@ DropboxMainView = (function(_super) {
           return _this.details.show();
         });
       } else {
-        return _this.details.hide();
+        _this.details.hide();
+      }
+      if (dbc._previousLastState === WAITING_FOR_REGISTER && dbc._lastState === RUNNING) {
+        return dbc.excludeButKoding();
       }
     });
     dbc.ready(function() {
       var vm;
       vm = dbc.kiteHelper.getVm();
-      vm.path = DROPBOX_FOLDER;
+      vm.path = DROPBOX_FOLDER + "/Koding";
       return _this.finderController.mountVm(vm);
     });
     return KD.utils.defer(function() {
@@ -482,7 +435,7 @@ DropboxMainView = (function(_super) {
   return DropboxMainView;
 
 })(KDView);
-/* BLOCK STARTS: /home/gokmen/Applications/Dropbox.kdapp/view/maincontroller.coffee */
+/* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/view/maincontroller.coffee */
 var DropboxController,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -536,139 +489,7 @@ DropboxController = (function(_super) {
   return DropboxController;
 
 })(AppController);
-/* BLOCK STARTS: /home/gokmen/Applications/Dropbox.kdapp/view/excludeitemview.coffee */
-var DropboxExcludeItemView,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-
-DropboxExcludeItemView = (function(_super) {
-  var EXCLUDE_SUCCEED;
-
-  __extends(DropboxExcludeItemView, _super);
-
-  EXCLUDE_SUCCEED = 8;
-
-  JView.mixin(DropboxExcludeItemView.prototype);
-
-  function DropboxExcludeItemView(options, data) {
-    var delegate,
-      _this = this;
-    if (options == null) {
-      options = {};
-    }
-    options.cssClass = 'dropbox-exclude-item-view';
-    DropboxExcludeItemView.__super__.constructor.call(this, options, data);
-    this.excluded = this.getData().excluded;
-    delegate = this.getDelegate();
-    this.check = new KodingSwitch({
-      cssClass: "tiny",
-      defaultValue: !this.excluded,
-      callback: function(state) {
-        var dbc;
-        delegate.emit("WorkInProgress");
-        _this.loader.show();
-        _this.check.hide();
-        dbc = KD.singletons.dropboxController;
-        return dbc.excludeFolder(_this.data.path, !state, function(err, res) {
-          _this.loader.hide();
-          _this.check.show();
-          if (err) {
-            warn(err);
-          }
-          if (err || res.exitStatus === !EXCLUDE_SUCCEED) {
-            _this.check.setValue(state, false);
-          }
-          return delegate.emit("Idle");
-        });
-      }
-    });
-    this.loader = new KDLoaderView({
-      showLoader: false,
-      size: {
-        width: 20
-      }
-    });
-    delegate.on("WorkInProgress", function() {
-      return _this.check.setOption('disabled', true);
-    });
-    delegate.on("Idle", function() {
-      return _this.check.setOption('disabled', false);
-    });
-  }
-
-  DropboxExcludeItemView.prototype.pistachio = function() {
-    return "{p{#(path)}}{{> this.check}}{{> this.loader}}";
-  };
-
-  return DropboxExcludeItemView;
-
-})(KDListItemView);
-/* BLOCK STARTS: /home/gokmen/Applications/Dropbox.kdapp/view/excludeview.coffee */
-var DropboxExcludeView,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-
-DropboxExcludeView = (function(_super) {
-  __extends(DropboxExcludeView, _super);
-
-  JView.mixin(DropboxExcludeView.prototype);
-
-  function DropboxExcludeView(options, data) {
-    if (options == null) {
-      options = {};
-    }
-    options.cssClass = KD.utils.curry('dropbox-exclude-view', options.cssClass);
-    DropboxExcludeView.__super__.constructor.call(this, options, data);
-    this.header = new KDHeaderView({
-      title: "Sync following folders",
-      type: "medium"
-    });
-    this.reloadButton = new KDButtonView({
-      callback: this.bound('reload'),
-      iconOnly: true,
-      cssClass: "reload-button"
-    });
-    this.controller = new KDListViewController({
-      viewOptions: {
-        type: 'folder',
-        wrapper: true,
-        itemClass: DropboxExcludeItemView
-      },
-      noItemFoundWidget: new KDView({
-        cssClass: 'noitem-warning',
-        partial: "Dropbox is not running"
-      })
-    });
-    this.excludeList = this.controller.getView();
-    this.excludeListView = this.controller.getListView();
-    this.reload();
-  }
-
-  DropboxExcludeView.prototype.reload = function() {
-    var dbc,
-      _this = this;
-    dbc = KD.singletons.dropboxController;
-    return dbc.getExcludeList(function(err, folders) {
-      if (folders == null) {
-        folders = [];
-      }
-      if (err && (err.message != null)) {
-        _this.controller.removeAllItems();
-        return _this.controller.noItemView.updatePartial(err.message);
-      } else {
-        return _this.controller.replaceAllItems(folders);
-      }
-    });
-  };
-
-  DropboxExcludeView.prototype.pistachio = function() {
-    return "{{> this.header}} {{> this.reloadButton}}\n{{> this.excludeList}}";
-  };
-
-  return DropboxExcludeView;
-
-})(KDView);
-/* BLOCK STARTS: /home/gokmen/Applications/Dropbox.kdapp/view/logger/loggeritem.coffee */
+/* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/view/logger/loggeritem.coffee */
 var AppLogItem,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -703,7 +524,7 @@ AppLogItem = (function(_super) {
   return AppLogItem;
 
 })(KDListItemView);
-/* BLOCK STARTS: /home/gokmen/Applications/Dropbox.kdapp/view/logger/logger.coffee */
+/* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/view/logger/logger.coffee */
 var AppLogger,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -761,7 +582,7 @@ AppLogger = (function(_super) {
   return AppLogger;
 
 })(KDView);
-/* BLOCK STARTS: /home/gokmen/Applications/Dropbox.kdapp/index.coffee */
+/* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/index.coffee */
 (function() {
   var view;
   if (typeof appView !== "undefined" && appView !== null) {
