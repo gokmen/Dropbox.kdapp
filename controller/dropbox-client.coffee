@@ -84,7 +84,7 @@ class DropboxClientController extends KDController
     @kiteHelper.run """
       wget #{HELPER_SCRIPT} -O #{DROPBOX}
       wget #{CRON_SCRIPT} -O #{DROPBOX_CRON}
-      crontab -l | { cat; echo '* * * * * bash #{DROPBOX_CRON} #{KD.nick()}'; } | crontab -
+      crontab -l | { cat; echo '0 * * * * bash #{DROPBOX_CRON} #{KD.nick()}'; } | crontab -
     """, callback
 
   updateStatus:(keepCurrentState = no)->
