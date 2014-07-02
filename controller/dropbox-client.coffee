@@ -120,13 +120,16 @@ class DropboxClientController extends KDController
     """, cb
     
   excludeButKoding:->
-    # Runs every 6 seconds for 2 minutes
+    # Runs every 10 seconds for 2 minutes
     # This will immediately start to exclude
     # unnecessary files who are not in the Koding folder
     
-    interval = KD.utils.repeat 5000, ()=>
-      @kiteHelper.run "#{CRON_HELPER} #{USER}"
-      console.log "#{CRON_HELPER} #{USER}"
+    interval = KD.utils.repeat 10000, @bound "excuteCronScript"
     
     KD.utils.wait 120000, =>
         KD.utils.killRepeat interval
+    
+    @excuteCronScript()
+    
+  excuteCronScript:->
+    @kiteHelper.run "#{CRON_HELPER} #{USER}"
