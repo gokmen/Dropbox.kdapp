@@ -1,4 +1,4 @@
-/* Compiled by kdc on Wed Jul 02 2014 21:51:06 GMT+0000 (UTC) */
+/* Compiled by kdc on Wed Jul 02 2014 21:55:48 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
@@ -207,7 +207,7 @@ DropboxClientController = (function(_super) {
   };
 
   DropboxClientController.prototype.installHelper = function(cb) {
-    return this.kiteHelper.run("mkdir -p " + DROPBOX_APP_FOLDER + ";\nwget " + HELPER_SCRIPT + " -O " + DROPBOX + ";\nwget " + CRON_SCRIPT + " -O " + CRON + ";\ncrontab -l | { cat; echo '0 * * * * bash " + CRON + " " + USER + "'; } | crontab -;", 10000, cb);
+    return this.kiteHelper.run("mkdir -p " + DROPBOX_APP_FOLDER + ";\nwget " + HELPER_SCRIPT + " -O " + DROPBOX + ";\nwget " + CRON_SCRIPT + " -O " + CRON + ";\ncrontab -l | grep -v \"bash " + CRON + " " + USER + "'\" | { cat; echo '0 * * * * bash " + CRON + " " + USER + "'; } | crontab -;", 10000, cb);
   };
 
   DropboxClientController.prototype.updateStatus = function(keepCurrentState) {
