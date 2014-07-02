@@ -9,12 +9,15 @@
 
 class DropboxClientController extends KDController
 
-  HELPER_SCRIPT = "https://rest.kd.io/gokmen/Dropbox.kdapp/master/resources/dropbox.py"
-  CRON_SCRIPT = "https://rest.kd.io/gokmen/Dropbox.kdapp/master/resources/dropbox.sh"
-  DROPBOX = "/tmp/_dropbox.py"
-  DROPBOX_CRON = "/tmp/_dropbox.sh"
-  DROPBOX_FOLDER = "/home/#{KD.nick()}/Dropbox"
-  HELPER  = "python #{DROPBOX}"
+  USER                = KD.nick()
+  HELPER_SCRIPT       = "https://rest.kd.io/gokmen/Dropbox.kdapp/master/resources/dropbox.py"
+  CRON_SCRIPT         = "https://rest.kd.io/gokmen/Dropbox.kdapp/master/resources/dropbox.sh"
+  DROPBOX_APP_FOLDER  = "/home/#{USER}/.dropbox-app"
+  DROPBOX             = "#{DROPBOX_APP_FOLDER}/dropbox.py"
+  CRON                = "#{DROPBOX_APP_FOLDER}/dropbox.sh"
+  DROPBOX_FOLDER      = "/home/#{USER}/Dropbox"
+  HELPER              = "python #{DROPBOX}"
+  CRON_HELPER         = "bash #{CRON}" 
   [IDLE, RUNNING, HELPER_FAILED, WAITING_FOR_REGISTER,
    NOT_INSTALLED, AUTH_LINK_FOUND, NO_FOLDER_EXCLUDED,
    LIST_OF_EXCLUDED, EXCLUDE_SUCCEED] = [0..8]
@@ -39,6 +42,7 @@ class DropboxClientController extends KDController
 
     @_lastState = IDLE
     @kiteHelper.getKite().then (kite)=>
+      window.a = kite
       kite.fsExists(path : DROPBOX).then (state)=>
         if not state
           @_lastState = HELPER_FAILED
@@ -63,9 +67,9 @@ class DropboxClientController extends KDController
           @announce "Dropbox installed successfully, you can start the daemon now"
 
   start:->
- 
+    
     @announce "Starting Dropbox daemon...", yes
-    @kiteHelper.run "#{HELPER} start;", 10000, @bound 'updateStatus'
+    @kiteHelper.run " #{HELPER} start;", 10000, @bound 'updateStatus'
     
   stop:->
 
@@ -73,19 +77,21 @@ class DropboxClientController extends KDController
     @kiteHelper.run "#{HELPER} stop", 10000, @bound 'updateStatus'
 
   getAuthLink:(callback)->
+    
     @kiteHelper.run "#{HELPER} link", (err, res)->
       if not err and res.exitStatus is AUTH_LINK_FOUND
         callback null, res.stdout.match /https\S+/
       else
         callback {message: "Failed to fetch auth link."}
-
-  installHelper:(callback)->
-
+  
+  installHelper:(cb)->
+    
     @kiteHelper.run """
-      wget #{HELPER_SCRIPT} -O #{DROPBOX}
-      wget #{CRON_SCRIPT} -O #{DROPBOX_CRON}
-      crontab -l | { cat; echo '0 * * * * bash #{DROPBOX_CRON} #{KD.nick()}'; } | crontab -
-    """, callback
+      mkdir -p #{DROPBOX_APP_FOLDER};
+      wget #{HELPER_SCRIPT} -O #{DROPBOX};
+      wget #{CRON_SCRIPT} -O #{CRON};
+      crontab -l | { cat; echo '0 * * * * bash #{CRON} #{USER}'; } | crontab -;
+    """, 10000, cb
 
   updateStatus:(keepCurrentState = no)->
 
@@ -107,7 +113,20 @@ class DropboxClientController extends KDController
       @_locked = no
 
   createDropboxDirectory:(cb)->
+    
     @kiteHelper.run """
       mkdir -p #{DROPBOX_FOLDER};
       mkdir -p #{DROPBOX_FOLDER}/Koding;
     """, cb
+    
+  excludeButKoding:->
+    # Runs every 6 seconds for 1 minute
+    # This will immediately start to exclude
+    # unnecessary files who are not in the Koding folder
+    
+    interval = KD.utils.repeat 6000, ()=>
+      @kiteHelper.run "#{CRON_HELPER} #{USER}"
+      console.log "#{CRON_HELPER} #{USER}"
+    
+    KD.utils.wait 60000, =>
+        KD.utils.killRepeat interval

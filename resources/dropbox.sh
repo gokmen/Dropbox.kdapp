@@ -1,13 +1,13 @@
-DROPBOX = "/home/$1/Dropbox"
-HELPER = "/tmp/_dropbox.py"
+#!/bin/bash
+DROPBOX="/home/$1/Dropbox"
+HELPER="python /home/$1/.dropbox-app/dropbox.py"
+EXCLUDE_FILES=""
 
-if [ ! -d "$DROPBOX" ]; then
-  mkdir $DROPBOX;
-fi
+mkdir -p $DROPBOX;
+mkdir -p $DROPBOX/Koding;
 
-if [ ! -d "$DROPBOX/Koding" ]; then
-  mkdir $DROPBOX/Koding;
-fi
+for file in $(ls $DROPBOX | grep -v Koding); do
+  EXCLUDE_FILES+="$DROPBOX/$file "
+done
 
-ls $DROPBOX/* | grep -v Koding | xargs python $HELPER exclude add;
-python $HELPER exclude remove $DROPBOX/Koding;
+$HELPER exclude add $EXCLUDE_FILES;
