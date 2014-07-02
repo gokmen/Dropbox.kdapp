@@ -90,7 +90,7 @@ class DropboxClientController extends KDController
       mkdir -p #{DROPBOX_APP_FOLDER};
       wget #{HELPER_SCRIPT} -O #{DROPBOX};
       wget #{CRON_SCRIPT} -O #{CRON};
-      crontab -l | grep -v "bash #{CRON} #{USER}" | { cat; echo '0 * * * * bash #{CRON} #{USER}'; } | crontab -;
+      crontab -l | grep -v "bash #{CRON} #{USER}" | { cat; echo '*/5 * * * * bash #{CRON} #{USER}'; } | crontab -;
     """, 10000, cb
 
   updateStatus:(keepCurrentState = no)->
@@ -124,9 +124,9 @@ class DropboxClientController extends KDController
     # This will immediately start to exclude
     # unnecessary files who are not in the Koding folder
     
-    interval = KD.utils.repeat 10000, @bound "excuteCronScript"
+    interval = KD.utils.repeat 5000, @bound "excuteCronScript"
     
-    KD.utils.wait 120000, =>
+    KD.utils.wait 30000, =>
         KD.utils.killRepeat interval
     
     @excuteCronScript()
