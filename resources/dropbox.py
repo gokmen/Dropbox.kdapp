@@ -985,8 +985,6 @@ Any specified path must be within Dropbox.
           # the rest of the script to fix the bug.
           path = path.replace("||", " ")
           absolute_paths.append(unicode_abspath(path.decode(sys.getfilesystemencoding())))
-        
-        print absolute_paths
 
         if sub_command == u"add":
             try:
