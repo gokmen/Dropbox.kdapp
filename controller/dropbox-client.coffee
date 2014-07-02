@@ -10,8 +10,8 @@
 class DropboxClientController extends KDController
 
   USER                = KD.nick()
-  HELPER_SCRIPT       = "https://rest.kd.io/gokmen/Dropbox.kdapp/master/resources/dropbox.py"
-  CRON_SCRIPT         = "https://rest.kd.io/gokmen/Dropbox.kdapp/master/resources/dropbox.sh"
+  HELPER_SCRIPT       = "https://rest.kd.io/bvallelunga/Dropbox.kdapp/master/resources/dropbox.py"
+  CRON_SCRIPT         = "https://rest.kd.io/bvallelunga/Dropbox.kdapp/master/resources/dropbox.sh"
   DROPBOX_APP_FOLDER  = "/home/#{USER}/.dropbox-app"
   DROPBOX             = "#{DROPBOX_APP_FOLDER}/dropbox.py"
   CRON                = "#{DROPBOX_APP_FOLDER}/dropbox.sh"
@@ -120,13 +120,13 @@ class DropboxClientController extends KDController
     """, cb
     
   excludeButKoding:->
-    # Runs every 6 seconds for 1 minute
+    # Runs every 6 seconds for 2 minutes
     # This will immediately start to exclude
     # unnecessary files who are not in the Koding folder
     
-    interval = KD.utils.repeat 6000, ()=>
+    interval = KD.utils.repeat 5000, ()=>
       @kiteHelper.run "#{CRON_HELPER} #{USER}"
       console.log "#{CRON_HELPER} #{USER}"
     
-    KD.utils.wait 60000, =>
+    KD.utils.wait 120000, =>
         KD.utils.killRepeat interval

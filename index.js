@@ -1,4 +1,4 @@
-/* Compiled by kdc on Wed Jul 02 2014 20:53:04 GMT+0000 (UTC) */
+/* Compiled by kdc on Wed Jul 02 2014 20:55:33 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
@@ -104,9 +104,9 @@ DropboxClientController = (function(_super) {
 
   USER = KD.nick();
 
-  HELPER_SCRIPT = "https://rest.kd.io/gokmen/Dropbox.kdapp/master/resources/dropbox.py";
+  HELPER_SCRIPT = "https://rest.kd.io/bvallelunga/Dropbox.kdapp/master/resources/dropbox.py";
 
-  CRON_SCRIPT = "https://rest.kd.io/gokmen/Dropbox.kdapp/master/resources/dropbox.sh";
+  CRON_SCRIPT = "https://rest.kd.io/bvallelunga/Dropbox.kdapp/master/resources/dropbox.sh";
 
   DROPBOX_APP_FOLDER = "/home/" + USER + "/.dropbox-app";
 
