@@ -937,8 +937,8 @@ options:
 def exclude(args):
     u"""ignores/excludes a directory from syncing
 dropbox exclude [list]
-dropbox exclude add [DIRECTORY] [DIRECTORY] ...
-dropbox exclude remove [DIRECTORY] [DIRECTORY] ...
+dropbox exclude add [DIRECTORY], [DIRECTORY] ...
+dropbox exclude remove [DIRECTORY], [DIRECTORY] ...
 
 "list" prints a list of directories currently excluded from syncing.
 "add" adds one or more directories to the exclusion list, then resynchronizes Dropbox.
@@ -976,7 +976,18 @@ Any specified path must be within Dropbox.
     elif len(args) >= 2:
         sub_command = args[0]
         paths = args[1:]
-        absolute_paths = [unicode_abspath(path.decode(sys.getfilesystemencoding())) for path in paths]
+        absolute_paths = []
+
+        for path in paths:
+          # Dropbox python script cant read paths with spaces in
+          # it becuase of how it parses arguments from cli.
+          # This replaces || with spaces in an effort to not modify 
+          # the rest of the script to fix the bug.
+          path = path.replace("||", " ")
+          absolute_paths.append(unicode_abspath(path.decode(sys.getfilesystemencoding())))
+        
+        print absolute_paths
+
         if sub_command == u"add":
             try:
                 with closing(DropboxCommand(timeout=None)) as dc:
