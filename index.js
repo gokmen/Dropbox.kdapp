@@ -1,4 +1,4 @@
-/* Compiled by kdc on Wed Jul 02 2014 23:46:31 GMT+0000 (UTC) */
+/* Compiled by kdc on Thu Jul 03 2014 19:50:43 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
@@ -50,15 +50,24 @@ KiteHelper = (function(_super) {
     var _this = this;
     return new Promise(function(resolve, reject) {
       return _this.getReady().then(function() {
-        var kite, vm;
+        var kite, vm, vmController;
         vm = _this.getVm().hostnameAlias;
+        vmController = KD.singletons.vmController;
         if (!(kite = _this._kites[vm])) {
           return reject({
             message: "No such kite for " + vm
           });
         }
-        return kite.vmOn().then(function() {
-          return resolve(kite);
+        return vmController.info(vm, function(err, vmn, info) {
+          if (info.state === "STOPPED") {
+            return kite.vmOn().then(function() {
+              return resolve(kite);
+            })["catch"](function(err) {
+              return reject(err);
+            });
+          } else {
+            return resolve(kite);
+          }
         });
       });
     });
@@ -78,6 +87,15 @@ KiteHelper = (function(_super) {
         command: cmd
       }).then(function(result) {
         return callback(null, result);
+      })["catch"](function(err) {
+        if (callback) {
+          return callback({
+            message: "Failed to run " + cmd,
+            details: err
+          });
+        } else {
+          return console.error(err);
+        }
       });
     })["catch"](function(err) {
       if (callback) {
@@ -85,6 +103,8 @@ KiteHelper = (function(_super) {
           message: "Failed to run " + cmd,
           details: err
         });
+      } else {
+        return console.error(err);
       }
     });
   };

@@ -28,7 +28,7 @@ class KiteHelper extends KDController
           alias = vm.hostnameAlias
           @_kites[alias] = kiteController
             .getKite "os-#{ vm.region }", alias, 'os'
-
+        
         @emit 'ready'
         resolve()
 
@@ -43,12 +43,20 @@ class KiteHelper extends KDController
       @getReady().then =>
 
         vm = @getVm().hostnameAlias
+        {vmController} = KD.singletons
 
         unless kite = @_kites[vm]
           return reject
             message: "No such kite for #{vm}"
-
-        kite.vmOn().then -> resolve kite
+        
+        vmController.info vm, (err, vmn, info)->
+          if info.state is "STOPPED"
+            kite.vmOn().then ->
+              resolve kite
+            .catch (err)->
+              reject err
+          else
+            resolve kite
 
   run:(cmd, timeout, callback)->
 
@@ -59,11 +67,19 @@ class KiteHelper extends KDController
     timeout ?= 10 * 60 * 1000
     @getKite().then (kite)->
       kite.options.timeout = timeout
-      kite.exec(command: cmd)
-      .then (result)->
+      kite.exec(command: cmd).then (result)->
         callback null, result
+      .catch (err)->
+          if callback
+            callback
+              message : "Failed to run #{cmd}"
+              details : err
+          else
+            console.error err
     .catch (err)->
       if callback
         callback
           message : "Failed to run #{cmd}"
           details : err
+      else 
+        console.error err
