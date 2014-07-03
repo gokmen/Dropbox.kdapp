@@ -1,4 +1,4 @@
-/* Compiled by kdc on Thu Jul 03 2014 20:39:13 GMT+0000 (UTC) */
+/* Compiled by kdc on Thu Jul 03 2014 20:48:20 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
@@ -89,7 +89,9 @@ KiteHelper = (function(_super) {
       return kite.exec({
         command: cmd
       }).then(function(result) {
-        return callback(null, result);
+        if (callback) {
+          return callback(null, result);
+        }
       })["catch"](function(err) {
         if (callback) {
           return callback({

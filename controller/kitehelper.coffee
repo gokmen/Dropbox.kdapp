@@ -72,7 +72,8 @@ class KiteHelper extends KDController
     @getKite().then (kite)->
       kite.options.timeout = timeout
       kite.exec(command: cmd).then (result)->
-        callback null, result
+        if callback
+          callback null, result
       .catch (err)->
           if callback
             callback
