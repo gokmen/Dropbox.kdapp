@@ -1,4 +1,4 @@
-/* Compiled by kdc on Thu Jul 03 2014 19:50:43 GMT+0000 (UTC) */
+/* Compiled by kdc on Thu Jul 03 2014 19:55:22 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
@@ -623,9 +623,9 @@ AppLogger = (function(_super) {
       name: "Dropbox",
       routes: {
         "/:name?/Dropbox": null,
-        "/:name?/gokmen/Apps/Dropbox": null
+        "/:name?/bvallelunga/Apps/Dropbox": null
       },
-      dockPath: "/gokmen/Apps/Dropbox",
+      dockPath: "/bvallelunga/Apps/Dropbox",
       behavior: "application"
     });
   }

@@ -21,6 +21,6 @@ do ->
       name     : "Dropbox"
       routes   :
         "/:name?/Dropbox" : null
-        "/:name?/gokmen/Apps/Dropbox" : null
-      dockPath : "/gokmen/Apps/Dropbox"
+        "/:name?/bvallelunga/Apps/Dropbox" : null
+      dockPath : "/bvallelunga/Apps/Dropbox"
       behavior : "application"
