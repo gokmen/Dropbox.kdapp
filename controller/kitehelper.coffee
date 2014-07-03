@@ -9,7 +9,7 @@
 
 class KiteHelper extends KDController
   
-  mvIsOn: false
+  mvIsStarting: false
   
   getReady:->
 
@@ -52,11 +52,12 @@ class KiteHelper extends KDController
             message: "No such kite for #{vm}"
         
         vmController.info vm, (err, vmn, info)=>
-          if info.state is "STOPPED"
-            @mvIsOn = true
+          if !@mvIsStarting and info.state is "STOPPED"
+            @mvIsStarting = true
             
             kite.vmOn().then ->
               resolve kite
+            
             .catch (err)->
               reject err
           else

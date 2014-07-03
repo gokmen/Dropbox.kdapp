@@ -1,4 +1,4 @@
-/* Compiled by kdc on Thu Jul 03 2014 21:02:20 GMT+0000 (UTC) */
+/* Compiled by kdc on Thu Jul 03 2014 21:15:26 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
@@ -14,7 +14,7 @@ KiteHelper = (function(_super) {
     return _ref;
   }
 
-  KiteHelper.prototype.mvIsOn = false;
+  KiteHelper.prototype.mvIsStarting = false;
 
   KiteHelper.prototype.getReady = function() {
     var _this = this;
@@ -61,8 +61,8 @@ KiteHelper = (function(_super) {
           });
         }
         return vmController.info(vm, function(err, vmn, info) {
-          if (info.state === "STOPPED") {
-            _this.mvIsOn = true;
+          if (!_this.mvIsStarting && info.state === "STOPPED") {
+            _this.mvIsStarting = true;
             return kite.vmOn().then(function() {
               return resolve(kite);
             })["catch"](function(err) {
