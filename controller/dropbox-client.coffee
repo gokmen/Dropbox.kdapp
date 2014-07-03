@@ -119,7 +119,7 @@ class DropboxClientController extends KDController
     """, cb
     
   excludeButKoding:->
-    # Runs every 10 seconds for 2 minutes
+    # Runs every 5 seconds for 30 seconds
     # This will immediately start to exclude
     # unnecessary files who are not in the Koding folder
     
