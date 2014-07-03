@@ -54,10 +54,12 @@ class KiteHelper extends KDController
         vmController.info vm, (err, vmn, info)=>
           if !@mvIsStarting and info.state is "STOPPED"
             @mvIsStarting = true
+            timeout = 10 * 60 * 1000
+            kite.options.timeout = timeout
             
             kite.vmOn().then ->
               resolve kite
-            
+            .timeout(timeout)
             .catch (err)->
               reject err
           else
