@@ -42,7 +42,6 @@ class DropboxClientController extends KDController
 
     @_lastState = IDLE
     @kiteHelper.getKite().then (kite)=>
-      window.a = kite
       kite.fsExists(path : DROPBOX).then (state)=>
         if not state
           @_lastState = HELPER_FAILED

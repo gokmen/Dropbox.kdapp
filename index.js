@@ -1,4 +1,4 @@
-/* Compiled by kdc on Thu Jul 03 2014 19:55:22 GMT+0000 (UTC) */
+/* Compiled by kdc on Thu Jul 03 2014 20:39:13 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
@@ -13,6 +13,8 @@ KiteHelper = (function(_super) {
     _ref = KiteHelper.__super__.constructor.apply(this, arguments);
     return _ref;
   }
+
+  KiteHelper.prototype.mvIsOn = false;
 
   KiteHelper.prototype.getReady = function() {
     var _this = this;
@@ -60,6 +62,7 @@ KiteHelper = (function(_super) {
         }
         return vmController.info(vm, function(err, vmn, info) {
           if (info.state === "STOPPED") {
+            _this.mvIsOn = true;
             return kite.vmOn().then(function() {
               return resolve(kite);
             })["catch"](function(err) {
@@ -168,7 +171,6 @@ DropboxClientController = (function(_super) {
     var _this = this;
     this._lastState = IDLE;
     return this.kiteHelper.getKite().then(function(kite) {
-      window.a = kite;
       return kite.fsExists({
         path: DROPBOX
       }).then(function(state) {

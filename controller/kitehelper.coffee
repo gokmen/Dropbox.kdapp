@@ -8,7 +8,9 @@
 # any later version.
 
 class KiteHelper extends KDController
-
+  
+  mvIsOn: false
+  
   getReady:->
 
     new Promise (resolve, reject) =>
@@ -49,8 +51,10 @@ class KiteHelper extends KDController
           return reject
             message: "No such kite for #{vm}"
         
-        vmController.info vm, (err, vmn, info)->
+        vmController.info vm, (err, vmn, info)=>
           if info.state is "STOPPED"
+            @mvIsOn = true
+            
             kite.vmOn().then ->
               resolve kite
             .catch (err)->
