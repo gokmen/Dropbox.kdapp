@@ -49,7 +49,7 @@ class DropboxMainView extends KDView
 
     mcontainer.addSubView @message = new KDView
       cssClass : 'message'
-      partial : "Checking state..."
+      partial  : "Please wait while your vm turns on..."
 
     container.addSubView @details = new KDView
       cssClass : 'details hidden'

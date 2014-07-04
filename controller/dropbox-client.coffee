@@ -56,7 +56,7 @@ class DropboxClientController extends KDController
 
   install:(callback)->
 
-    @announce "Installing Dropbox daemon...", yes
+    @announce "Installing the Dropbox daemon...", yes
     @kiteHelper.run "#{HELPER} install", (err, res)=>
       if err
         @announce "Failed to install Dropbox, please try again."
@@ -67,12 +67,12 @@ class DropboxClientController extends KDController
 
   start:->
     
-    @announce "Starting Dropbox daemon...", yes
+    @announce "Starting the Dropbox daemon...", yes
     @kiteHelper.run " #{HELPER} start;", 10000, @bound 'updateStatus'
     
   stop:->
 
-    @announce "Stoping Dropbox daemon...", yes
+    @announce "Stoping the Dropbox daemon...", yes
     @kiteHelper.run "#{HELPER} stop", 10000, @bound 'updateStatus'
 
   getAuthLink:(callback)->

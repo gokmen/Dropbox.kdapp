@@ -1,4 +1,4 @@
-/* Compiled by kdc on Thu Jul 03 2014 22:59:23 GMT+0000 (UTC) */
+/* Compiled by kdc on Fri Jul 04 2014 01:09:30 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
@@ -198,7 +198,7 @@ DropboxClientController = (function(_super) {
 
   DropboxClientController.prototype.install = function(callback) {
     var _this = this;
-    this.announce("Installing Dropbox daemon...", true);
+    this.announce("Installing the Dropbox daemon...", true);
     return this.kiteHelper.run("" + HELPER + " install", function(err, res) {
       if (err) {
         return _this.announce("Failed to install Dropbox, please try again.");
@@ -212,12 +212,12 @@ DropboxClientController = (function(_super) {
   };
 
   DropboxClientController.prototype.start = function() {
-    this.announce("Starting Dropbox daemon...", true);
+    this.announce("Starting the Dropbox daemon...", true);
     return this.kiteHelper.run(" " + HELPER + " start;", 10000, this.bound('updateStatus'));
   };
 
   DropboxClientController.prototype.stop = function() {
-    this.announce("Stoping Dropbox daemon...", true);
+    this.announce("Stoping the Dropbox daemon...", true);
     return this.kiteHelper.run("" + HELPER + " stop", 10000, this.bound('updateStatus'));
   };
 
@@ -337,7 +337,7 @@ DropboxMainView = (function(_super) {
     }));
     mcontainer.addSubView(this.message = new KDView({
       cssClass: 'message',
-      partial: "Checking state..."
+      partial: "Please wait while your vm turns on..."
     }));
     container.addSubView(this.details = new KDView({
       cssClass: 'details hidden',
