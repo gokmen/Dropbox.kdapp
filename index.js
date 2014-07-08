@@ -1,4 +1,4 @@
-/* Compiled by kdc on Tue Jul 08 2014 23:18:12 GMT+0000 (UTC) */
+/* Compiled by kdc on Tue Jul 08 2014 23:35:11 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
@@ -406,8 +406,7 @@ DropboxMainView = (function(_super) {
       return this.setClass('hidden');
     };
     dbc.on("status-update", function(message, busy) {
-      var _ref1, _ref2;
-      console.log(message, dbc._previousLastState, dbc._lastState);
+      var _ref1;
       _this.loader[busy ? "show" : "hide"]();
       _this.reloadButton[busy ? "hide" : "show"]();
       if (message) {
@@ -455,9 +454,10 @@ DropboxMainView = (function(_super) {
       } else {
         _this.details.hide();
       }
-      if (((_ref2 = dbc._previousLastState) === IDLE || _ref2 === WAITING_FOR_REGISTER) && dbc._lastState === RUNNING) {
-        dbc.excludeButKoding();
-        return alert(dbc._previousLastState);
+      if (dbc._lastState === RUNNING) {
+        if (dbc._previousLastState === WAITING_FOR_REGISTER || message === "Up to date") {
+          return dbc.excludeButKoding();
+        }
       }
     });
     dbc.ready(function() {
