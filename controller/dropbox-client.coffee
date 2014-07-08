@@ -132,9 +132,9 @@ class DropboxClientController extends KDController
     
     KD.utils.wait wait, =>
         KD.utils.killRepeat interval
-        
+
         # Run again if there are still files to be excluded
-        KD.utils.wait repeat, =>
+        KD.utils.wait wait, =>
           @kiteHelper.run "ls #{DROPBOX_FOLDER} | grep -v Koding", (err, res)=>
               if not err and res.stdout
                 @excludeButKoding 5000, 30000

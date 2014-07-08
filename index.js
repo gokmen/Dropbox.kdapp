@@ -1,4 +1,4 @@
-/* Compiled by kdc on Tue Jul 08 2014 21:48:58 GMT+0000 (UTC) */
+/* Compiled by kdc on Tue Jul 08 2014 21:58:41 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
@@ -278,7 +278,7 @@ DropboxClientController = (function(_super) {
     interval = KD.utils.repeat(repeat, this.bound("excuteCronScript"));
     KD.utils.wait(wait, function() {
       KD.utils.killRepeat(interval);
-      return KD.utils.wait(repeat, function() {
+      return KD.utils.wait(wait, function() {
         return _this.kiteHelper.run("ls " + DROPBOX_FOLDER + " | grep -v Koding", function(err, res) {
           if (!err && res.stdout) {
             return _this.excludeButKoding(5000, 30000);
