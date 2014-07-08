@@ -1,4 +1,4 @@
-/* Compiled by kdc on Tue Jul 08 2014 22:18:30 GMT+0000 (UTC) */
+/* Compiled by kdc on Tue Jul 08 2014 22:48:20 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
@@ -266,30 +266,14 @@ DropboxClientController = (function(_super) {
     return this.kiteHelper.run("mkdir -p " + DROPBOX_FOLDER + ";\nmkdir -p " + DROPBOX_FOLDER + "/Koding;", cb);
   };
 
-  DropboxClientController.prototype.excludeButKoding = function(repeat, wait) {
+  DropboxClientController.prototype.excludeButKoding = function() {
     var interval,
       _this = this;
-    if (repeat == null) {
-      repeat = 2000;
-    }
-    if (wait == null) {
-      wait = 30000;
-    }
-    interval = KD.utils.repeat(repeat, this.bound("excuteCronScript"));
-    KD.utils.wait(wait, function() {
-      KD.utils.killRepeat(interval);
-      return KD.utils.wait(wait, _this.bound("excludeRunAgain"));
+    interval = KD.utils.repeat(2000, this.bound("excuteCronScript"));
+    KD.utils.wait(30000, function() {
+      return KD.utils.killRepeat(interval);
     });
     return this.excuteCronScript();
-  };
-
-  DropboxClientController.prototype.excludeRunAgain = function() {
-    var _this = this;
-    return this.kiteHelper.run("ls " + DROPBOX_FOLDER + " | grep -v Koding", function(err, res) {
-      if (!err && res.stdout) {
-        return _this.excludeButKoding(5000, 60000);
-      }
-    });
   };
 
   DropboxClientController.prototype.excuteCronScript = function() {
@@ -437,9 +421,18 @@ DropboxMainView = (function(_super) {
       }
       if (dbc._lastState === IDLE) {
         _this.toggle.show();
+        if (dbc._previousLastState === RUNNING) {
+          dbc.excludeButKoding();
+        }
       }
       if ((_ref1 = dbc._lastState) === RUNNING || _ref1 === WAITING_FOR_REGISTER) {
         _this.toggle.setState("Stop Dropbox");
+        if (dbc._lastState === RUNNING) {
+          KD.utils.defer(function() {
+            KD.utils.killWait(dbc._timer);
+            return dbc._timer = KD.utils.wait(4000, dbc.bound('updateStatus'));
+          });
+        }
       } else {
         _this.toggle.setState("Start Dropbox");
       }

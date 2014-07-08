@@ -122,24 +122,16 @@ class DropboxClientController extends KDController
       mkdir -p #{DROPBOX_FOLDER}/Koding;
     """, cb
     
-  excludeButKoding:(repeat, wait)->
+  excludeButKoding:->
     # This method will immediately start to exclude
     # unnecessary files who are not in the Koding folder
+
+    interval = KD.utils.repeat 2000, @bound "excuteCronScript"
     
-    repeat ?= 2000
-    wait ?= 30000
-    interval = KD.utils.repeat repeat, @bound "excuteCronScript"
-    
-    KD.utils.wait wait, =>
+    KD.utils.wait 30000, =>
       KD.utils.killRepeat interval
-      KD.utils.wait wait, @bound "excludeRunAgain"
     
     @excuteCronScript()
-  
-  excludeRunAgain:->
-    @kiteHelper.run "ls #{DROPBOX_FOLDER} | grep -v Koding", (err, res)=>
-      if not err and res.stdout
-        @excludeButKoding 5000, 60000
   
   excuteCronScript:->
     @kiteHelper.run "#{CRON_HELPER} #{USER}"

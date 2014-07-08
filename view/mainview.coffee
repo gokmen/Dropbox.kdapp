@@ -115,14 +115,18 @@ class DropboxMainView extends KDView
 
       return  if busy
 
-      if dbc._lastState is IDLE then @toggle.show()
+      if dbc._lastState is IDLE
+        @toggle.show()
+        
+        if dbc._previousLastState is RUNNING
+          dbc.excludeButKoding()
 
       if dbc._lastState in [RUNNING, WAITING_FOR_REGISTER]
         @toggle.setState "Stop Dropbox"
-        # if dbc._lastState is RUNNING
-        #   KD.utils.defer ->
-        #     KD.utils.killWait dbc._timer
-        #     dbc._timer = KD.utils.wait 4000, dbc.bound 'updateStatus'
+        if dbc._lastState is RUNNING
+          KD.utils.defer ->
+            KD.utils.killWait dbc._timer
+            dbc._timer = KD.utils.wait 4000, dbc.bound 'updateStatus'
       else
         @toggle.setState "Start Dropbox"
 
