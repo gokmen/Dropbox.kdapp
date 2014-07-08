@@ -1,4 +1,4 @@
-/* Compiled by kdc on Tue Jul 08 2014 20:33:30 GMT+0000 (UTC) */
+/* Compiled by kdc on Tue Jul 08 2014 20:49:35 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
@@ -176,7 +176,6 @@ DropboxClientController = (function(_super) {
     var _this = this;
     this._lastState = IDLE;
     return this.kiteHelper.getKite().then(function(kite) {
-      debugger;
       return kite.fsExists({
         path: DROPBOX
       }).then(function(state) {
