@@ -102,6 +102,7 @@ class DropboxMainView extends KDView
       @setClass 'hidden'
 
     dbc.on "status-update", (message, busy)=>
+      console.log message, dbc._previousLastState, dbc._lastState
 
       @loader[if busy then "show" else "hide"]()
       @reloadButton[if busy then "hide" else "show"]()
@@ -117,16 +118,9 @@ class DropboxMainView extends KDView
 
       if dbc._lastState is IDLE
         @toggle.show()
-        
-        if dbc._previousLastState is RUNNING
-          dbc.excludeButKoding()
 
       if dbc._lastState in [RUNNING, WAITING_FOR_REGISTER]
         @toggle.setState "Stop Dropbox"
-        if dbc._lastState is RUNNING
-          KD.utils.defer ->
-            KD.utils.killWait dbc._timer
-            dbc._timer = KD.utils.wait 4000, dbc.bound 'updateStatus'
       else
         @toggle.setState "Start Dropbox"
 
@@ -160,8 +154,9 @@ class DropboxMainView extends KDView
       else
         @details.hide()
         
-      if dbc._previousLastState is WAITING_FOR_REGISTER and dbc._lastState is RUNNING
+      if dbc._previousLastState in [IDLE, WAITING_FOR_REGISTER] and dbc._lastState is RUNNING
         dbc.excludeButKoding()
+        alert dbc._previousLastState
 
     dbc.ready =>
       vm = dbc.kiteHelper.getVm()

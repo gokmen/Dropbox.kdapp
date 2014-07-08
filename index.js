@@ -1,4 +1,4 @@
-/* Compiled by kdc on Tue Jul 08 2014 22:48:20 GMT+0000 (UTC) */
+/* Compiled by kdc on Tue Jul 08 2014 23:18:12 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
@@ -406,7 +406,8 @@ DropboxMainView = (function(_super) {
       return this.setClass('hidden');
     };
     dbc.on("status-update", function(message, busy) {
-      var _ref1;
+      var _ref1, _ref2;
+      console.log(message, dbc._previousLastState, dbc._lastState);
       _this.loader[busy ? "show" : "hide"]();
       _this.reloadButton[busy ? "hide" : "show"]();
       if (message) {
@@ -421,18 +422,9 @@ DropboxMainView = (function(_super) {
       }
       if (dbc._lastState === IDLE) {
         _this.toggle.show();
-        if (dbc._previousLastState === RUNNING) {
-          dbc.excludeButKoding();
-        }
       }
       if ((_ref1 = dbc._lastState) === RUNNING || _ref1 === WAITING_FOR_REGISTER) {
         _this.toggle.setState("Stop Dropbox");
-        if (dbc._lastState === RUNNING) {
-          KD.utils.defer(function() {
-            KD.utils.killWait(dbc._timer);
-            return dbc._timer = KD.utils.wait(4000, dbc.bound('updateStatus'));
-          });
-        }
       } else {
         _this.toggle.setState("Start Dropbox");
       }
@@ -463,8 +455,9 @@ DropboxMainView = (function(_super) {
       } else {
         _this.details.hide();
       }
-      if (dbc._previousLastState === WAITING_FOR_REGISTER && dbc._lastState === RUNNING) {
-        return dbc.excludeButKoding();
+      if (((_ref2 = dbc._previousLastState) === IDLE || _ref2 === WAITING_FOR_REGISTER) && dbc._lastState === RUNNING) {
+        dbc.excludeButKoding();
+        return alert(dbc._previousLastState);
       }
     });
     dbc.ready(function() {
