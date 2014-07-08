@@ -42,6 +42,7 @@ class DropboxClientController extends KDController
 
     @_lastState = IDLE
     @kiteHelper.getKite().then (kite)=>
+      debugger
       kite.fsExists(path : DROPBOX).then (state)=>
         if not state
           @_lastState = HELPER_FAILED
@@ -123,14 +124,19 @@ class DropboxClientController extends KDController
     """, cb
     
   excludeButKoding:->
-    # Runs every 5 seconds for 2 minutes
+    # Runs every 2 seconds for 1 minute
     # This will immediately start to exclude
     # unnecessary files who are not in the Koding folder
     
-    interval = KD.utils.repeat 5000, @bound "excuteCronScript"
+    interval = KD.utils.repeat 2000, @bound "excuteCronScript"
     
-    KD.utils.wait 120000, =>
+    KD.utils.wait 60000, =>
         KD.utils.killRepeat interval
+        
+        # Run again if there are still files to be excluded
+        @kiteHelper.run "ls #{DROPBOX_FOLDER} | grep -v Koding", (err, res)=>
+            if not err and res
+              @excludeButKoding()
     
     @excuteCronScript()
     
