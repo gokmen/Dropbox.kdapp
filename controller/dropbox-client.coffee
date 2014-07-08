@@ -134,8 +134,7 @@ class DropboxClientController extends KDController
         
         # Run again if there are still files to be excluded
         @kiteHelper.run "ls #{DROPBOX_FOLDER} | grep -v Koding", (err, res)=>
-            console.log err, res
-            if not err and res
+            if not err and res.stdout
               @excludeButKoding()
     
     @excuteCronScript()
