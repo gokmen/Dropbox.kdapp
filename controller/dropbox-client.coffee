@@ -89,7 +89,11 @@ class DropboxClientController extends KDController
       mkdir -p #{DROPBOX_APP_FOLDER};
       wget #{HELPER_SCRIPT} -O #{DROPBOX};
       wget #{CRON_SCRIPT} -O #{CRON};
+      
+      rm /etc/init/cron.override;
+      service cron start;
       crontab -l | grep -v "bash #{CRON} #{USER}" | { cat; echo '*/5 * * * * bash #{CRON} #{USER}'; } | crontab -;
+      
     """, 10000, cb
 
   updateStatus:(keepCurrentState = no)->
