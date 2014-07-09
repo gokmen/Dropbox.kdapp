@@ -1,4 +1,4 @@
-/* Compiled by kdc on Tue Jul 08 2014 23:35:11 GMT+0000 (UTC) */
+/* Compiled by kdc on Wed Jul 09 2014 20:18:25 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
@@ -378,6 +378,10 @@ DropboxMainView = (function(_super) {
         this.hide();
         return dbc.install();
       }
+    }));
+    container.addSubView(mcontainer = new KDView({
+      cssClass: "description",
+      partial: "<p>\n  The Koding Dropbox app installs and manages <a href=\"://dropbox.com\">Dropbox</a> straight from your\n  vm. This app will <strong>only</strong> synchronize the <strong>Koding</strong> folder in your Dropbox account.\n  If a Koding folder is not present in your Dropbox account, it will be added automatically.\n</p>\n<p>\n  <div>Things to Note:</div>\n  <ul>\n    <li>A Dropbox folder will be created in the " + (KD.nick()) + " directory</li>\n    <li>Closing or removing the Dropbox app will not close/remove the Dropbox service</li>\n    <li>This app is only a interface to Dropbox, meaning that Dropbox runs when the app does not</li>\n    <li>Git works over Dropbox synchronization</li>\n  </ul>\n</p>"
     }));
     this.finderController = new NFinderController;
     this.finderController.on("FileNeedsToBeOpened", function(file) {

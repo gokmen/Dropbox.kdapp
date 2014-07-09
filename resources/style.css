@@ -94,6 +94,44 @@ div.kdview.dropbox.application-page {
   margin-left: 0 !important;
 }
 
+.dropbox > .container > .description {
+  font-size: 16px;
+  line-height: 22px;
+  color: #333 !important;
+  text-align: left;
+}
+
+.dropbox > .container > .description p {
+  margin: 20px 5px;
+}
+
+.dropbox > .container > .description div {
+  margin-bottom: 10px;
+  text-decoration: underline;
+  font-weight: 400;  
+}
+
+.dropbox > .container > .description ul {
+  list-style-type: disc;
+}
+
+.dropbox > .container > .description ul li {
+  margin: 0 0 10px 30px;
+}
+
+.dropbox > .container > .description strong {
+  font-weight: 400;
+}
+
+.dropbox > .container > .description a {
+  color: #167DE5;
+  text-decoration: none;
+}
+
+.dropbox > .container > .description a:hover {
+  text-decoration: underline;
+}
+
 body.dropbox .dropbox > .file-container {
   top: 55px !important;
 }
