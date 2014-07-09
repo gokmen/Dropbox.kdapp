@@ -82,7 +82,7 @@ class DropboxMainView extends KDView
       cssClass : "description"
       partial  : """
         <p>
-          The Koding Dropbox app installs and manages <a href="://dropbox.com">Dropbox</a> straight from your
+          The Koding Dropbox app installs and manages <a target="_blank" href="//dropbox.com">Dropbox</a> straight from your
           vm. This app will <strong>only</strong> synchronize the <strong>Koding</strong> folder in your Dropbox account.
         </p>
         <p>
