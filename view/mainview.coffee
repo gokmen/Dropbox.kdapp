@@ -84,14 +84,13 @@ class DropboxMainView extends KDView
         <p>
           The Koding Dropbox app installs and manages <a href="://dropbox.com">Dropbox</a> straight from your
           vm. This app will <strong>only</strong> synchronize the <strong>Koding</strong> folder in your Dropbox account.
-          If a Koding folder is not present in your Dropbox account, it will be added automatically.
         </p>
         <p>
           <div>Things to Note:</div>
           <ul>
-            <li>A Dropbox folder will be created in the #{KD.nick()} directory</li>
-            <li>Closing or removing the Dropbox app will not close/remove the Dropbox service</li>
-            <li>This app is only a interface to Dropbox, meaning that Dropbox runs when the app does not</li>
+            <li>A Dropbox folder will be created in the <strong>#{KD.nick()}</strong> directory</li>
+            <li>Closing/removing the Dropbox app will not close/remove the Dropbox service</li>
+            <li>This app is only a interface to Dropbox</li>
             <li>Git works over Dropbox synchronization</li>
           </ul>
         </p>

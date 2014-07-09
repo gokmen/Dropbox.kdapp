@@ -1,4 +1,4 @@
-/* Compiled by kdc on Wed Jul 09 2014 20:20:44 GMT+0000 (UTC) */
+/* Compiled by kdc on Wed Jul 09 2014 20:23:51 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
