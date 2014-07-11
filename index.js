@@ -1,4 +1,4 @@
-/* Compiled by kdc on Fri Jul 11 2014 19:16:48 GMT+0000 (UTC) */
+/* Compiled by kdc on Fri Jul 11 2014 21:10:56 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
@@ -214,7 +214,7 @@ DropboxClientController = (function(_super) {
   DropboxClientController.prototype.uninstall = function() {
     var _this = this;
     this.announce("Uninstalling the Dropbox daemon...", true);
-    return this.kiteHelper.run("rm -r .dropbox* Dropbox;\ncrontab -l | grep -v \"bash " + CRON + " " + USER + "\" | crontab -;", function(err, res) {
+    return this.kiteHelper.run("rm -r .dropbox .dropbox-dist Dropbox;\ncrontab -l | grep -v \"bash " + CRON + " " + USER + "\" | crontab -;", function(err, res) {
       if (err) {
         return _this.announce("Failed to uninstall Dropbox, please try again.");
       } else {
@@ -373,8 +373,9 @@ DropboxMainView = (function(_super) {
         {
           title: "Start Dropbox",
           callback: function() {
-            this.hide();
-            return dbc.start();
+            _this.toggle.hide();
+            dbc.start();
+            return _this.uninstallButton.hide();
           }
         }, {
           title: "Stop Dropbox",
@@ -398,7 +399,9 @@ DropboxMainView = (function(_super) {
       title: "Uninstall Dropbox",
       cssClass: "solid db-install hidden",
       callback: function() {
-        return dbc.uninstall();
+        _this.uninstallButton.hide();
+        dbc.uninstall();
+        return _this.toggle.hide();
       }
     }));
     container.addSubView(mcontainer = new KDView({
@@ -450,6 +453,7 @@ DropboxMainView = (function(_super) {
       }
       if ((_ref1 = dbc._lastState) === RUNNING || _ref1 === WAITING_FOR_REGISTER) {
         _this.toggle.setState("Stop Dropbox");
+        _this.uninstallButton.hide();
       } else {
         _this.toggle.setState("Start Dropbox");
         _this.uninstallButton.show();
@@ -459,7 +463,6 @@ DropboxMainView = (function(_super) {
         _this.uninstallButton.hide();
         _this.toggle.hide();
       } else {
-        _this.installButton.hide();
         _this.installButton.hide();
         if (dbc._lastState === HELPER_FAILED) {
           _this.loader.show();

@@ -64,7 +64,9 @@ class DropboxMainView extends KDView
         diameter   : 16
       states       : [
         title      : "Start Dropbox"
-        callback   : -> this.hide(); dbc.start()
+        callback   : =>
+          @toggle.hide(); dbc.start();
+          @uninstallButton.hide();
       ,
         title      : "Stop Dropbox"
         callback   : =>
@@ -81,8 +83,9 @@ class DropboxMainView extends KDView
     container.addSubView @uninstallButton = new KDButtonView
       title    : "Uninstall Dropbox"
       cssClass : "solid db-install hidden"
-      callback : ->
-        dbc.uninstall()
+      callback : =>
+        @uninstallButton.hide(); dbc.uninstall();
+        @toggle.hide();
         
     container.addSubView mcontainer = new KDView
       cssClass : "description"
@@ -143,6 +146,7 @@ class DropboxMainView extends KDView
 
       if dbc._lastState in [RUNNING, WAITING_FOR_REGISTER]
         @toggle.setState "Stop Dropbox"
+        @uninstallButton.hide()
       else
         @toggle.setState "Start Dropbox"
         @uninstallButton.show()
@@ -153,10 +157,9 @@ class DropboxMainView extends KDView
         @toggle.hide()
       else
         @installButton.hide()
-        @installButton.hide()
         if dbc._lastState is HELPER_FAILED
         then @loader.show()
-        else @toggle.show()
+        else @toggle.show();
 
       @finder[if dbc._lastState is RUNNING then "show" else "hide"]()
 
