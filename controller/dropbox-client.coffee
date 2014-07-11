@@ -54,7 +54,7 @@ class DropboxClientController extends KDController
         else
           @updateStatus yes
 
-  install:(callback)->
+  install:->
 
     @announce "Installing the Dropbox daemon...", yes
     @kiteHelper.run "#{HELPER} install", (err, res)=>
@@ -64,6 +64,17 @@ class DropboxClientController extends KDController
         KD.utils.wait 2000, =>
           @_lastState = IDLE
           @announce "Dropbox installed successfully, you can start the daemon now"
+
+  uninstall:->
+    
+    @announce "Uninstalling the Dropbox daemon...", yes
+    @kiteHelper.run "rm -r .dropbox* Dropbox", (err, res)=>
+      if err
+        @announce "Failed to uninstall Dropbox, please try again."
+      else
+        KD.utils.wait 2000, =>
+          @_lastState = NOT_INSTALLED
+          @announce "Dropbox has been successfully uninstalled."
 
   start:->
     

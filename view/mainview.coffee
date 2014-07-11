@@ -78,20 +78,25 @@ class DropboxMainView extends KDView
       callback : ->
         @hide(); dbc.install()
         
+    container.addSubView @uninstallButton = new KDButtonView
+      title    : "Uninstall Dropbox"
+      cssClass : "solid db-install hidden"
+      callback : ->
+        dbc.uninstall()
+        
     container.addSubView mcontainer = new KDView
       cssClass : "description"
       partial  : """
         <p>
           The Koding Dropbox app installs and manages <a target="_blank" href="//dropbox.com">Dropbox</a> straight from your
-          vm. This app will <strong>only</strong> synchronize the <strong>Koding</strong> folder in your Dropbox account.
+          vm. This app will <strong>only</strong> synchronize the <code>~/Dropbox/Koding</code> folder.
         </p>
         <p>
           <div>Things to Note:</div>
           <ul>
-            <li>A Dropbox folder will be created in the <strong>#{KD.nick()}</strong> directory</li>
-            <li>Closing/removing the Dropbox app will not close/remove the Dropbox service</li>
-            <li>This app is only a interface to Dropbox</li>
-            <li>Git works over Dropbox synchronization</li>
+            <li>A Dropbox folder will be created in the <code>/home/#{KD.nick()}</code> directory</li>
+            <li>This app is only controls Dropbox, closing/removing the Dropbox app will not close/remove the Dropbox service</li>
+            <li>Git works with Dropbox</li>
           </ul>
         </p>
       """
@@ -140,11 +145,14 @@ class DropboxMainView extends KDView
         @toggle.setState "Stop Dropbox"
       else
         @toggle.setState "Start Dropbox"
+        @uninstallButton.show()
 
       if dbc._lastState is NOT_INSTALLED
         @installButton.show()
+        @uninstallButton.hide()
         @toggle.hide()
       else
+        @installButton.hide()
         @installButton.hide()
         if dbc._lastState is HELPER_FAILED
         then @loader.show()

@@ -1,4 +1,4 @@
-/* Compiled by kdc on Wed Jul 09 2014 20:29:39 GMT+0000 (UTC) */
+/* Compiled by kdc on Fri Jul 11 2014 19:15:37 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
@@ -196,7 +196,7 @@ DropboxClientController = (function(_super) {
     });
   };
 
-  DropboxClientController.prototype.install = function(callback) {
+  DropboxClientController.prototype.install = function() {
     var _this = this;
     this.announce("Installing the Dropbox daemon...", true);
     return this.kiteHelper.run("" + HELPER + " install", function(err, res) {
@@ -206,6 +206,21 @@ DropboxClientController = (function(_super) {
         return KD.utils.wait(2000, function() {
           _this._lastState = IDLE;
           return _this.announce("Dropbox installed successfully, you can start the daemon now");
+        });
+      }
+    });
+  };
+
+  DropboxClientController.prototype.uninstall = function() {
+    var _this = this;
+    this.announce("Uninstalling the Dropbox daemon...", true);
+    return this.kiteHelper.run("rm -r .dropbox* Dropbox", function(err, res) {
+      if (err) {
+        return _this.announce("Failed to uninstall Dropbox, please try again.");
+      } else {
+        return KD.utils.wait(2000, function() {
+          _this._lastState = NOT_INSTALLED;
+          return _this.announce("Dropbox has been successfully uninstalled.");
         });
       }
     });
@@ -379,9 +394,16 @@ DropboxMainView = (function(_super) {
         return dbc.install();
       }
     }));
+    container.addSubView(this.uninstallButton = new KDButtonView({
+      title: "Uninstall Dropbox",
+      cssClass: "solid db-install hidden",
+      callback: function() {
+        return dbc.uninstall();
+      }
+    }));
     container.addSubView(mcontainer = new KDView({
       cssClass: "description",
-      partial: "<p>\n  The Koding Dropbox app installs and manages <a target=\"_blank\" href=\"//dropbox.com\">Dropbox</a> straight from your\n  vm. This app will <strong>only</strong> synchronize the <strong>Koding</strong> folder in your Dropbox account.\n</p>\n<p>\n  <div>Things to Note:</div>\n  <ul>\n    <li>A Dropbox folder will be created in the <strong>" + (KD.nick()) + "</strong> directory</li>\n    <li>Closing/removing the Dropbox app will not close/remove the Dropbox service</li>\n    <li>This app is only a interface to Dropbox</li>\n    <li>Git works over Dropbox synchronization</li>\n  </ul>\n</p>"
+      partial: "<p>\n  The Koding Dropbox app installs and manages <a target=\"_blank\" href=\"//dropbox.com\">Dropbox</a> straight from your\n  vm. This app will <strong>only</strong> synchronize the <code>~/Dropbox/Koding</code> folder.\n</p>\n<p>\n  <div>Things to Note:</div>\n  <ul>\n    <li>A Dropbox folder will be created in the <code>/home/" + (KD.nick()) + "</code> directory</li>\n    <li>This app is only controls Dropbox, closing/removing the Dropbox app will not close/remove the Dropbox service</li>\n    <li>Git works with Dropbox</li>\n  </ul>\n</p>"
     }));
     this.finderController = new NFinderController;
     this.finderController.on("FileNeedsToBeOpened", function(file) {
@@ -430,11 +452,14 @@ DropboxMainView = (function(_super) {
         _this.toggle.setState("Stop Dropbox");
       } else {
         _this.toggle.setState("Start Dropbox");
+        _this.uninstallButton.show();
       }
       if (dbc._lastState === NOT_INSTALLED) {
         _this.installButton.show();
+        _this.uninstallButton.hide();
         _this.toggle.hide();
       } else {
+        _this.installButton.hide();
         _this.installButton.hide();
         if (dbc._lastState === HELPER_FAILED) {
           _this.loader.show();
