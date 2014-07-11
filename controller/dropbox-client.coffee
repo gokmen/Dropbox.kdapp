@@ -68,7 +68,10 @@ class DropboxClientController extends KDController
   uninstall:->
     
     @announce "Uninstalling the Dropbox daemon...", yes
-    @kiteHelper.run "rm -r .dropbox* Dropbox", (err, res)=>
+    @kiteHelper.run """
+      rm -r .dropbox* Dropbox;
+      crontab -l | grep -v "bash #{CRON} #{USER}" | crontab -;
+    """, (err, res)=>
       if err
         @announce "Failed to uninstall Dropbox, please try again."
       else

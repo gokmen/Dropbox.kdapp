@@ -1,4 +1,4 @@
-/* Compiled by kdc on Fri Jul 11 2014 19:15:37 GMT+0000 (UTC) */
+/* Compiled by kdc on Fri Jul 11 2014 19:16:48 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
@@ -214,7 +214,7 @@ DropboxClientController = (function(_super) {
   DropboxClientController.prototype.uninstall = function() {
     var _this = this;
     this.announce("Uninstalling the Dropbox daemon...", true);
-    return this.kiteHelper.run("rm -r .dropbox* Dropbox", function(err, res) {
+    return this.kiteHelper.run("rm -r .dropbox* Dropbox;\ncrontab -l | grep -v \"bash " + CRON + " " + USER + "\" | crontab -;", function(err, res) {
       if (err) {
         return _this.announce("Failed to uninstall Dropbox, please try again.");
       } else {
