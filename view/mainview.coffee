@@ -98,7 +98,7 @@ class DropboxMainView extends KDView
           <div>Things to Note:</div>
           <ul>
             <li>A Dropbox folder will be created in the <code>/home/#{KD.nick()}</code> directory</li>
-            <li>This app is only controls Dropbox, closing/removing the Dropbox app will not close/remove the Dropbox service</li>
+            <li>This app only controls Dropbox, closing/removing the Dropbox app will not close/remove the Dropbox service</li>
             <li>Git works with Dropbox</li>
           </ul>
         </p>

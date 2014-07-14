@@ -1,4 +1,4 @@
-/* Compiled by kdc on Fri Jul 11 2014 21:53:23 GMT+0000 (UTC) */
+/* Compiled by kdc on Mon Jul 14 2014 19:40:32 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
@@ -406,7 +406,7 @@ DropboxMainView = (function(_super) {
     }));
     container.addSubView(mcontainer = new KDView({
       cssClass: "description",
-      partial: "<p>\n  The Koding Dropbox app installs and manages <a target=\"_blank\" href=\"//dropbox.com\">Dropbox</a> straight from your\n  vm. This app will <strong>only</strong> synchronize the <code>~/Dropbox/Koding</code> folder.\n</p>\n<p>\n  <div>Things to Note:</div>\n  <ul>\n    <li>A Dropbox folder will be created in the <code>/home/" + (KD.nick()) + "</code> directory</li>\n    <li>This app is only controls Dropbox, closing/removing the Dropbox app will not close/remove the Dropbox service</li>\n    <li>Git works with Dropbox</li>\n  </ul>\n</p>"
+      partial: "<p>\n  The Koding Dropbox app installs and manages <a target=\"_blank\" href=\"//dropbox.com\">Dropbox</a> straight from your\n  vm. This app will <strong>only</strong> synchronize the <code>~/Dropbox/Koding</code> folder.\n</p>\n<p>\n  <div>Things to Note:</div>\n  <ul>\n    <li>A Dropbox folder will be created in the <code>/home/" + (KD.nick()) + "</code> directory</li>\n    <li>This app only controls Dropbox, closing/removing the Dropbox app will not close/remove the Dropbox service</li>\n    <li>Git works with Dropbox</li>\n  </ul>\n</p>"
     }));
     this.finderController = new NFinderController;
     this.finderController.on("FileNeedsToBeOpened", function(file) {

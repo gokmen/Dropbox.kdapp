@@ -11,12 +11,10 @@ do ->
 
   # In live mode you can add your App view to window's appView
   if appView?
-
     view = new DropboxMainView
     appView.addSubView view
-
+  
   else
-
     KD.registerAppClass DropboxController,
       name     : "Dropbox"
       routes   :
