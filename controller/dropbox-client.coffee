@@ -11,13 +11,14 @@ class DropboxClientController extends KDController
 
   USER                = KD.nick()
   HELPER_SCRIPT       = "https://rest.kd.io/bvallelunga/Dropbox.kdapp/master/resources/dropbox.py"
-  CRON_SCRIPT         = "https://rest.kd.io/bvallelunga/Dropbox.kdapp/master/resources/dropbox.sh"
+  BASH_SCRIPT         = "https://rest.kd.io/bvallelunga/Dropbox.kdapp/master/resources/dropbox.sh"
+  BASH_LOGIN          = "/home/#{USER}/.bash_profile"
   DROPBOX_APP_FOLDER  = "/home/#{USER}/.dropbox-app"
   DROPBOX             = "#{DROPBOX_APP_FOLDER}/dropbox.py"
-  CRON                = "#{DROPBOX_APP_FOLDER}/dropbox.sh"
+  BASH                = "#{DROPBOX_APP_FOLDER}/dropbox.sh"
   DROPBOX_FOLDER      = "/home/#{USER}/Dropbox"
   HELPER              = "python #{DROPBOX}"
-  CRON_HELPER         = "bash #{CRON}" 
+  BASH_HELPER         = "bash #{BASH}" 
   [IDLE, RUNNING, HELPER_FAILED, WAITING_FOR_REGISTER,
    NOT_INSTALLED, AUTH_LINK_FOUND, NO_FOLDER_EXCLUDED,
    LIST_OF_EXCLUDED, EXCLUDE_SUCCEED] = [0..8]
@@ -70,7 +71,7 @@ class DropboxClientController extends KDController
     @announce "Uninstalling the Dropbox daemon...", yes
     @kiteHelper.run """
       rm -r .dropbox .dropbox-dist Dropbox;
-      crontab -l | grep -v "bash #{CRON} #{USER}" | crontab -;
+      grep -v "bash #{BASH} #{USER}" #{BASH_LOGIN} > #{BASH_LOGIN};
     """, (err, res)=>
       if err
         @announce "Failed to uninstall Dropbox, please try again."
@@ -98,16 +99,15 @@ class DropboxClientController extends KDController
         callback {message: "Failed to fetch auth link."}
   
   installHelper:(cb)->
+    bash_command = "bash #{BASH} #{USER} true &"
     
     @kiteHelper.run """
+      touch #{BASH_LOGIN};
       mkdir -p #{DROPBOX_APP_FOLDER};
       wget #{HELPER_SCRIPT} -O #{DROPBOX};
-      wget #{CRON_SCRIPT} -O #{CRON};
-      
-      rm /etc/init/cron.override;
-      service cron start;
-      crontab -l | grep -v "bash #{CRON} #{USER}" | { cat; echo '*/5 * * * * bash #{CRON} #{USER}'; } | crontab -;
-      
+      wget #{BASH_SCRIPT} -O #{BASH};
+      #{bash_command}
+      grep -v '#{bash_command}' #{BASH_LOGIN} | { cat; echo '#{bash_command}'; } > #{BASH_LOGIN};
     """, 10000, cb
 
   updateStatus:(keepCurrentState = no)->
@@ -140,13 +140,13 @@ class DropboxClientController extends KDController
     # This method will immediately start to exclude
     # unnecessary files who are not in the Koding folder
 
-    interval = KD.utils.repeat 2000, @bound "excuteCronScript"
+    interval = KD.utils.repeat 2000, @bound "excuteBashScript"
     
     KD.utils.wait 30000, =>
       KD.utils.killRepeat interval
     
     @excuteCronScript()
   
-  excuteCronScript:->
-    @kiteHelper.run "#{CRON_HELPER} #{USER}"
+  excuteBashScript:->
+    @kiteHelper.run "#{BASH_HELPER} #{USER}"
   

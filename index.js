@@ -1,8 +1,11 @@
-/* Compiled by kdc on Mon Jul 14 2014 19:40:32 GMT+0000 (UTC) */
+/* Compiled by kdc on Mon Jul 14 2014 23:44:37 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
+if (typeof window.appPreview !== "undefined" && window.appPreview !== null) {
+  var appView = window.appPreview
+}
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
-var KiteHelper, _ref,
+var KiteHelper,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -10,37 +13,37 @@ KiteHelper = (function(_super) {
   __extends(KiteHelper, _super);
 
   function KiteHelper() {
-    _ref = KiteHelper.__super__.constructor.apply(this, arguments);
-    return _ref;
+    return KiteHelper.__super__.constructor.apply(this, arguments);
   }
 
   KiteHelper.prototype.mvIsStarting = false;
 
   KiteHelper.prototype.getReady = function() {
-    var _this = this;
-    return new Promise(function(resolve, reject) {
-      var JVM;
-      JVM = KD.remote.api.JVM;
-      return JVM.fetchVmsByContext(function(err, vms) {
-        var alias, kiteController, vm, _i, _len;
-        if (err) {
-          console.warn(err);
-        }
-        if (!vms) {
-          return;
-        }
-        _this._vms = vms;
-        _this._kites = {};
-        kiteController = KD.getSingleton('kiteController');
-        for (_i = 0, _len = vms.length; _i < _len; _i++) {
-          vm = vms[_i];
-          alias = vm.hostnameAlias;
-          _this._kites[alias] = kiteController.getKite("os-" + vm.region, alias, 'os');
-        }
-        _this.emit('ready');
-        return resolve();
-      });
-    });
+    return new Promise((function(_this) {
+      return function(resolve, reject) {
+        var JVM;
+        JVM = KD.remote.api.JVM;
+        return JVM.fetchVmsByContext(function(err, vms) {
+          var alias, kiteController, vm, _i, _len;
+          if (err) {
+            console.warn(err);
+          }
+          if (!vms) {
+            return;
+          }
+          _this._vms = vms;
+          _this._kites = {};
+          kiteController = KD.getSingleton('kiteController');
+          for (_i = 0, _len = vms.length; _i < _len; _i++) {
+            vm = vms[_i];
+            alias = vm.hostnameAlias;
+            _this._kites[alias] = kiteController.getKite("os-" + vm.region, alias, 'os');
+          }
+          _this.emit('ready');
+          return resolve();
+        });
+      };
+    })(this));
   };
 
   KiteHelper.prototype.getVm = function() {
@@ -49,40 +52,41 @@ KiteHelper = (function(_super) {
   };
 
   KiteHelper.prototype.getKite = function() {
-    var _this = this;
-    return new Promise(function(resolve, reject) {
-      return _this.getReady().then(function() {
-        var kite, vm, vmController;
-        vm = _this.getVm().hostnameAlias;
-        vmController = KD.singletons.vmController;
-        if (!(kite = _this._kites[vm])) {
-          return reject({
-            message: "No such kite for " + vm
-          });
-        }
-        return vmController.info(vm, function(err, vmn, info) {
-          var timeout;
-          if (!_this.mvIsStarting && info.state === "STOPPED") {
-            _this.mvIsStarting = true;
-            timeout = 10 * 60 * 1000;
-            kite.options.timeout = timeout;
-            return kite.vmOn().then(function() {
-              return resolve(kite);
-            }).timeout(timeout)["catch"](function(err) {
-              return reject(err);
+    return new Promise((function(_this) {
+      return function(resolve, reject) {
+        return _this.getReady().then(function() {
+          var kite, vm, vmController;
+          vm = _this.getVm().hostnameAlias;
+          vmController = KD.singletons.vmController;
+          if (!(kite = _this._kites[vm])) {
+            return reject({
+              message: "No such kite for " + vm
             });
-          } else {
-            return resolve(kite);
           }
+          return vmController.info(vm, function(err, vmn, info) {
+            var timeout;
+            if (!_this.mvIsStarting && info.state === "STOPPED") {
+              _this.mvIsStarting = true;
+              timeout = 10 * 60 * 1000;
+              kite.options.timeout = timeout;
+              return kite.vmOn().then(function() {
+                return resolve(kite);
+              }).timeout(timeout)["catch"](function(err) {
+                return reject(err);
+              });
+            } else {
+              return resolve(kite);
+            }
+          });
         });
-      });
-    });
+      };
+    })(this));
   };
 
   KiteHelper.prototype.run = function(cmd, timeout, callback) {
-    var _ref1;
+    var _ref;
     if (!callback) {
-      _ref1 = [callback, timeout], timeout = _ref1[0], callback = _ref1[1];
+      _ref = [callback, timeout], timeout = _ref[0], callback = _ref[1];
     }
     if (timeout == null) {
       timeout = 10 * 60 * 1000;
@@ -126,7 +130,7 @@ var DropboxClientController,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
 DropboxClientController = (function(_super) {
-  var AUTH_LINK_FOUND, CRON, CRON_HELPER, CRON_SCRIPT, DROPBOX, DROPBOX_APP_FOLDER, DROPBOX_FOLDER, EXCLUDE_SUCCEED, HELPER, HELPER_FAILED, HELPER_SCRIPT, IDLE, LIST_OF_EXCLUDED, NOT_INSTALLED, NO_FOLDER_EXCLUDED, RUNNING, USER, WAITING_FOR_REGISTER, _ref;
+  var AUTH_LINK_FOUND, BASH, BASH_HELPER, BASH_LOGIN, BASH_SCRIPT, DROPBOX, DROPBOX_APP_FOLDER, DROPBOX_FOLDER, EXCLUDE_SUCCEED, HELPER, HELPER_FAILED, HELPER_SCRIPT, IDLE, LIST_OF_EXCLUDED, NOT_INSTALLED, NO_FOLDER_EXCLUDED, RUNNING, USER, WAITING_FOR_REGISTER, _ref;
 
   __extends(DropboxClientController, _super);
 
@@ -134,25 +138,26 @@ DropboxClientController = (function(_super) {
 
   HELPER_SCRIPT = "https://rest.kd.io/bvallelunga/Dropbox.kdapp/master/resources/dropbox.py";
 
-  CRON_SCRIPT = "https://rest.kd.io/bvallelunga/Dropbox.kdapp/master/resources/dropbox.sh";
+  BASH_SCRIPT = "https://rest.kd.io/bvallelunga/Dropbox.kdapp/master/resources/dropbox.sh";
+
+  BASH_LOGIN = "/home/" + USER + "/.bash_profile";
 
   DROPBOX_APP_FOLDER = "/home/" + USER + "/.dropbox-app";
 
   DROPBOX = "" + DROPBOX_APP_FOLDER + "/dropbox.py";
 
-  CRON = "" + DROPBOX_APP_FOLDER + "/dropbox.sh";
+  BASH = "" + DROPBOX_APP_FOLDER + "/dropbox.sh";
 
   DROPBOX_FOLDER = "/home/" + USER + "/Dropbox";
 
   HELPER = "python " + DROPBOX;
 
-  CRON_HELPER = "bash " + CRON;
+  BASH_HELPER = "bash " + BASH;
 
   _ref = [0, 1, 2, 3, 4, 5, 6, 7, 8], IDLE = _ref[0], RUNNING = _ref[1], HELPER_FAILED = _ref[2], WAITING_FOR_REGISTER = _ref[3], NOT_INSTALLED = _ref[4], AUTH_LINK_FOUND = _ref[5], NO_FOLDER_EXCLUDED = _ref[6], LIST_OF_EXCLUDED = _ref[7], EXCLUDE_SUCCEED = _ref[8];
 
   function DropboxClientController(options, data) {
-    var dropboxController,
-      _this = this;
+    var dropboxController;
     if (options == null) {
       options = {};
     }
@@ -162,9 +167,11 @@ DropboxClientController = (function(_super) {
     }
     DropboxClientController.__super__.constructor.call(this, options, data);
     this.kiteHelper = new KiteHelper;
-    this.kiteHelper.ready(function() {
-      return _this.createDropboxDirectory(_this.lazyBound('emit', 'ready'));
-    });
+    this.kiteHelper.ready((function(_this) {
+      return function() {
+        return _this.createDropboxDirectory(_this.lazyBound('emit', 'ready'));
+      };
+    })(this));
     this.registerSingleton("dropboxController", this, true);
   }
 
@@ -173,57 +180,60 @@ DropboxClientController = (function(_super) {
   };
 
   DropboxClientController.prototype.init = function() {
-    var _this = this;
     this._lastState = IDLE;
-    return this.kiteHelper.getKite().then(function(kite) {
-      return kite.fsExists({
-        path: DROPBOX
-      }).then(function(state) {
-        if (!state) {
-          _this._lastState = HELPER_FAILED;
-          _this.announce("Dropbox helper is not available, fixing...", true);
-          return _this.installHelper(function(err, state) {
-            if (err || !state) {
-              return _this.announce("Failed to install helper, please try again");
-            } else {
-              return _this.init();
-            }
-          });
-        } else {
-          return _this.updateStatus(true);
-        }
-      });
-    });
+    return this.kiteHelper.getKite().then((function(_this) {
+      return function(kite) {
+        return kite.fsExists({
+          path: DROPBOX
+        }).then(function(state) {
+          if (!state) {
+            _this._lastState = HELPER_FAILED;
+            _this.announce("Dropbox helper is not available, fixing...", true);
+            return _this.installHelper(function(err, state) {
+              if (err || !state) {
+                return _this.announce("Failed to install helper, please try again");
+              } else {
+                return _this.init();
+              }
+            });
+          } else {
+            return _this.updateStatus(true);
+          }
+        });
+      };
+    })(this));
   };
 
   DropboxClientController.prototype.install = function() {
-    var _this = this;
     this.announce("Installing the Dropbox daemon...", true);
-    return this.kiteHelper.run("" + HELPER + " install", function(err, res) {
-      if (err) {
-        return _this.announce("Failed to install Dropbox, please try again.");
-      } else {
-        return KD.utils.wait(2000, function() {
-          _this._lastState = IDLE;
-          return _this.announce("Dropbox installed successfully, you can start the daemon now");
-        });
-      }
-    });
+    return this.kiteHelper.run("" + HELPER + " install", (function(_this) {
+      return function(err, res) {
+        if (err) {
+          return _this.announce("Failed to install Dropbox, please try again.");
+        } else {
+          return KD.utils.wait(2000, function() {
+            _this._lastState = IDLE;
+            return _this.announce("Dropbox installed successfully, you can start the daemon now");
+          });
+        }
+      };
+    })(this));
   };
 
   DropboxClientController.prototype.uninstall = function() {
-    var _this = this;
     this.announce("Uninstalling the Dropbox daemon...", true);
-    return this.kiteHelper.run("rm -r .dropbox .dropbox-dist Dropbox;\ncrontab -l | grep -v \"bash " + CRON + " " + USER + "\" | crontab -;", function(err, res) {
-      if (err) {
-        return _this.announce("Failed to uninstall Dropbox, please try again.");
-      } else {
-        return KD.utils.wait(2000, function() {
-          _this._lastState = NOT_INSTALLED;
-          return _this.announce("Dropbox has been successfully uninstalled.");
-        });
-      }
-    });
+    return this.kiteHelper.run("rm -r .dropbox .dropbox-dist Dropbox;\ngrep -v \"bash " + BASH + " " + USER + "\" " + BASH_LOGIN + " > " + BASH_LOGIN + ";", (function(_this) {
+      return function(err, res) {
+        if (err) {
+          return _this.announce("Failed to uninstall Dropbox, please try again.");
+        } else {
+          return KD.utils.wait(2000, function() {
+            _this._lastState = NOT_INSTALLED;
+            return _this.announce("Dropbox has been successfully uninstalled.");
+          });
+        }
+      };
+    })(this));
   };
 
   DropboxClientController.prototype.start = function() {
@@ -249,11 +259,12 @@ DropboxClientController = (function(_super) {
   };
 
   DropboxClientController.prototype.installHelper = function(cb) {
-    return this.kiteHelper.run("mkdir -p " + DROPBOX_APP_FOLDER + ";\nwget " + HELPER_SCRIPT + " -O " + DROPBOX + ";\nwget " + CRON_SCRIPT + " -O " + CRON + ";\n\nrm /etc/init/cron.override;\nservice cron start;\ncrontab -l | grep -v \"bash " + CRON + " " + USER + "\" | { cat; echo '*/5 * * * * bash " + CRON + " " + USER + "'; } | crontab -;\n", 10000, cb);
+    var bash_command;
+    bash_command = "bash " + BASH + " " + USER + " true &";
+    return this.kiteHelper.run("touch " + BASH_LOGIN + ";\nmkdir -p " + DROPBOX_APP_FOLDER + ";\nwget " + HELPER_SCRIPT + " -O " + DROPBOX + ";\nwget " + BASH_SCRIPT + " -O " + BASH + ";\n" + bash_command + "\ngrep -v '" + bash_command + "' " + BASH_LOGIN + " | { cat; echo '" + bash_command + "'; } > " + BASH_LOGIN + ";", 10000, cb);
   };
 
   DropboxClientController.prototype.updateStatus = function(keepCurrentState) {
-    var _this = this;
     if (keepCurrentState == null) {
       keepCurrentState = false;
     }
@@ -264,17 +275,19 @@ DropboxClientController = (function(_super) {
     if (!keepCurrentState) {
       this.announce(null, true);
     }
-    return this.kiteHelper.run("" + HELPER + " status", function(err, res) {
-      var message;
-      message = "Failed to fetch state.";
-      if (!err) {
-        message = res.stdout;
-        _this._previousLastState = _this._lastState;
-        _this._lastState = res.exitStatus;
-      }
-      _this.announce(message);
-      return _this._locked = false;
-    });
+    return this.kiteHelper.run("" + HELPER + " status", (function(_this) {
+      return function(err, res) {
+        var message;
+        message = "Failed to fetch state.";
+        if (!err) {
+          message = res.stdout;
+          _this._previousLastState = _this._lastState;
+          _this._lastState = res.exitStatus;
+        }
+        _this.announce(message);
+        return _this._locked = false;
+      };
+    })(this));
   };
 
   DropboxClientController.prototype.createDropboxDirectory = function(cb) {
@@ -282,17 +295,18 @@ DropboxClientController = (function(_super) {
   };
 
   DropboxClientController.prototype.excludeButKoding = function() {
-    var interval,
-      _this = this;
-    interval = KD.utils.repeat(2000, this.bound("excuteCronScript"));
-    KD.utils.wait(30000, function() {
-      return KD.utils.killRepeat(interval);
-    });
+    var interval;
+    interval = KD.utils.repeat(2000, this.bound("excuteBashScript"));
+    KD.utils.wait(30000, (function(_this) {
+      return function() {
+        return KD.utils.killRepeat(interval);
+      };
+    })(this));
     return this.excuteCronScript();
   };
 
-  DropboxClientController.prototype.excuteCronScript = function() {
-    return this.kiteHelper.run("" + CRON_HELPER + " " + USER);
+  DropboxClientController.prototype.excuteBashScript = function() {
+    return this.kiteHelper.run("" + BASH_HELPER + " " + USER);
   };
 
   return DropboxClientController;
@@ -324,8 +338,7 @@ DropboxMainView = (function(_super) {
   }
 
   DropboxMainView.prototype.viewAppended = function() {
-    var container, dbc, mcontainer,
-      _this = this;
+    var container, dbc, mcontainer;
     dbc = KD.singletons.dropboxController;
     this.addSubView(container = new KDView({
       cssClass: 'container'
@@ -372,18 +385,22 @@ DropboxMainView = (function(_super) {
       states: [
         {
           title: "Start Dropbox",
-          callback: function() {
-            _this.toggle.hide();
-            dbc.start();
-            return _this.uninstallButton.hide();
-          }
+          callback: (function(_this) {
+            return function() {
+              _this.toggle.hide();
+              dbc.start();
+              return _this.uninstallButton.hide();
+            };
+          })(this)
         }, {
           title: "Stop Dropbox",
-          callback: function() {
-            _this.toggle.hide();
-            dbc.stop();
-            return _this.finder.hide();
-          }
+          callback: (function(_this) {
+            return function() {
+              _this.toggle.hide();
+              dbc.stop();
+              return _this.finder.hide();
+            };
+          })(this)
         }
       ]
     }));
@@ -398,25 +415,29 @@ DropboxMainView = (function(_super) {
     container.addSubView(this.uninstallButton = new KDButtonView({
       title: "Uninstall Dropbox",
       cssClass: "solid db-install hidden",
-      callback: function() {
-        _this.uninstallButton.hide();
-        dbc.uninstall();
-        return _this.toggle.hide();
-      }
+      callback: (function(_this) {
+        return function() {
+          _this.uninstallButton.hide();
+          dbc.uninstall();
+          return _this.toggle.hide();
+        };
+      })(this)
     }));
     container.addSubView(mcontainer = new KDView({
       cssClass: "description",
       partial: "<p>\n  The Koding Dropbox app installs and manages <a target=\"_blank\" href=\"//dropbox.com\">Dropbox</a> straight from your\n  vm. This app will <strong>only</strong> synchronize the <code>~/Dropbox/Koding</code> folder.\n</p>\n<p>\n  <div>Things to Note:</div>\n  <ul>\n    <li>A Dropbox folder will be created in the <code>/home/" + (KD.nick()) + "</code> directory</li>\n    <li>This app only controls Dropbox, closing/removing the Dropbox app will not close/remove the Dropbox service</li>\n    <li>Git works with Dropbox</li>\n  </ul>\n</p>"
     }));
     this.finderController = new NFinderController;
-    this.finderController.on("FileNeedsToBeOpened", function(file) {
-      var appManager, router, _ref1;
-      _ref1 = KD.singletons, appManager = _ref1.appManager, router = _ref1.router;
-      appManager.openFile(file);
-      return KD.utils.wait(100, function() {
-        return router.handleRoute("/Ace");
-      });
-    });
+    this.finderController.on("FileNeedsToBeOpened", (function(_this) {
+      return function(file) {
+        var appManager, router, _ref1;
+        _ref1 = KD.singletons, appManager = _ref1.appManager, router = _ref1.router;
+        appManager.openFile(file);
+        return KD.utils.wait(100, function() {
+          return router.handleRoute("/Ace");
+        });
+      };
+    })(this));
     this.finderController.isNodesHiddenFor = function() {
       return true;
     };
@@ -434,70 +455,74 @@ DropboxMainView = (function(_super) {
       container.unsetClass('filemode');
       return this.setClass('hidden');
     };
-    dbc.on("status-update", function(message, busy) {
-      var _ref1;
-      _this.loader[busy ? "show" : "hide"]();
-      _this.reloadButton[busy ? "hide" : "show"]();
-      if (message) {
-        _this.message.updatePartial(message);
-      }
-      if (message) {
-        _this.logger.info(message, "| State:", dbc._lastState);
-      }
-      _this.toggle.hideLoader();
-      if (busy) {
-        return;
-      }
-      if (dbc._lastState === IDLE) {
-        _this.toggle.show();
-      }
-      if ((_ref1 = dbc._lastState) === RUNNING || _ref1 === WAITING_FOR_REGISTER) {
-        _this.toggle.setState("Stop Dropbox");
-        _this.uninstallButton.hide();
-      } else {
-        _this.toggle.setState("Start Dropbox");
-        _this.uninstallButton.show();
-      }
-      if (dbc._lastState === NOT_INSTALLED) {
-        _this.installButton.show();
-        _this.uninstallButton.hide();
-        _this.toggle.hide();
-      } else {
-        _this.installButton.hide();
-        if (dbc._lastState === HELPER_FAILED) {
-          _this.loader.show();
-        } else {
+    dbc.on("status-update", (function(_this) {
+      return function(message, busy) {
+        var _ref1;
+        _this.loader[busy ? "show" : "hide"]();
+        _this.reloadButton[busy ? "hide" : "show"]();
+        if (message) {
+          _this.message.updatePartial(message);
+        }
+        if (message) {
+          _this.logger.info(message, "| State:", dbc._lastState);
+        }
+        _this.toggle.hideLoader();
+        if (busy) {
+          return;
+        }
+        if (dbc._lastState === IDLE) {
           _this.toggle.show();
         }
-      }
-      _this.finder[dbc._lastState === RUNNING ? "show" : "hide"]();
-      if (dbc._lastState === WAITING_FOR_REGISTER) {
-        dbc.getAuthLink(function(err, link) {
-          if (err) {
-            message = err.message;
-            message = "" + err.message + " <cite>Retry</cite>";
-          } else {
-            message = "Please visit <a href=\"" + link + "\" target=_blank>" + link + "</a> to link\nyour Koding VM with your Dropbox account.";
-            KD.utils.wait(2500, dbc.bound('updateStatus'));
-          }
-          _this.details.updatePartial(message);
-          return _this.details.show();
-        });
-      } else {
-        _this.details.hide();
-      }
-      if (dbc._lastState === RUNNING) {
-        if (dbc._previousLastState === WAITING_FOR_REGISTER || message === "Up to date") {
-          return dbc.excludeButKoding();
+        if ((_ref1 = dbc._lastState) === RUNNING || _ref1 === WAITING_FOR_REGISTER) {
+          _this.toggle.setState("Stop Dropbox");
+          _this.uninstallButton.hide();
+        } else {
+          _this.toggle.setState("Start Dropbox");
+          _this.uninstallButton.show();
         }
-      }
-    });
-    dbc.ready(function() {
-      var vm;
-      vm = dbc.kiteHelper.getVm();
-      vm.path = DROPBOX_FOLDER + "/Koding";
-      return _this.finderController.mountVm(vm);
-    });
+        if (dbc._lastState === NOT_INSTALLED) {
+          _this.installButton.show();
+          _this.uninstallButton.hide();
+          _this.toggle.hide();
+        } else {
+          _this.installButton.hide();
+          if (dbc._lastState === HELPER_FAILED) {
+            _this.loader.show();
+          } else {
+            _this.toggle.show();
+          }
+        }
+        _this.finder[dbc._lastState === RUNNING ? "show" : "hide"]();
+        if (dbc._lastState === WAITING_FOR_REGISTER) {
+          dbc.getAuthLink(function(err, link) {
+            if (err) {
+              message = err.message;
+              message = "" + err.message + " <cite>Retry</cite>";
+            } else {
+              message = "Please visit <a href=\"" + link + "\" target=_blank>" + link + "</a> to link\nyour Koding VM with your Dropbox account.";
+              KD.utils.wait(2500, dbc.bound('updateStatus'));
+            }
+            _this.details.updatePartial(message);
+            return _this.details.show();
+          });
+        } else {
+          _this.details.hide();
+        }
+        if (dbc._lastState === RUNNING) {
+          if (dbc._previousLastState === WAITING_FOR_REGISTER || message === "Up to date") {
+            return dbc.excludeButKoding();
+          }
+        }
+      };
+    })(this));
+    dbc.ready((function(_this) {
+      return function() {
+        var vm;
+        vm = dbc.kiteHelper.getVm();
+        vm.path = DROPBOX_FOLDER + "/Koding";
+        return _this.finderController.mountVm(vm);
+      };
+    })(this));
     return KD.utils.defer(function() {
       return dbc.init();
     });
@@ -515,8 +540,7 @@ DropboxController = (function(_super) {
   __extends(DropboxController, _super);
 
   function DropboxController(options, data) {
-    var appManager, dropboxController, updateStatus, windowController, _ref,
-      _this = this;
+    var appManager, dropboxController, updateStatus, windowController, _ref;
     if (options == null) {
       options = {};
     }
@@ -528,24 +552,30 @@ DropboxController = (function(_super) {
     DropboxController.__super__.constructor.call(this, options, data);
     this.logger = this.getView().logger;
     dropboxController = KD.singletons.dropboxController;
-    updateStatus = function(state) {
-      dropboxController._stopped = !state;
-      if (state) {
-        _this.logger.info("Dropbox app is active now, check status.");
-        return dropboxController.updateStatus();
-      } else {
-        return _this.logger.info("Dropbox app lost the focus, stop polling.");
-      }
-    };
+    updateStatus = (function(_this) {
+      return function(state) {
+        dropboxController._stopped = !state;
+        if (state) {
+          _this.logger.info("Dropbox app is active now, check status.");
+          return dropboxController.updateStatus();
+        } else {
+          return _this.logger.info("Dropbox app lost the focus, stop polling.");
+        }
+      };
+    })(this);
     _ref = KD.singletons, windowController = _ref.windowController, appManager = _ref.appManager;
-    appManager.on('AppIsBeingShown', function(app) {
-      return updateStatus(app.getId() === _this.getId());
-    });
-    windowController.addFocusListener(function(state) {
-      if (appManager.frontApp.getId() === _this.getId()) {
-        return updateStatus(state);
-      }
-    });
+    appManager.on('AppIsBeingShown', (function(_this) {
+      return function(app) {
+        return updateStatus(app.getId() === _this.getId());
+      };
+    })(this));
+    windowController.addFocusListener((function(_this) {
+      return function(state) {
+        if (appManager.frontApp.getId() === _this.getId()) {
+          return updateStatus(state);
+        }
+      };
+    })(this));
   }
 
   DropboxController.prototype.enableLogs = function() {
@@ -605,7 +635,6 @@ AppLogger = (function(_super) {
   __extends(AppLogger, _super);
 
   function AppLogger(options, data) {
-    var _this = this;
     if (options == null) {
       options = {};
     }
@@ -618,20 +647,22 @@ AppLogger = (function(_super) {
       }),
       scrollView: true
     });
-    ['log', 'warn', 'info', 'error'].forEach(function(mtype) {
-      return _this[mtype] = function() {
-        var rest;
-        rest = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-        _this.list.addItem({
-          message: rest
-        }, {
-          type: mtype
-        });
-        if (_this.parentIsInDom) {
-          return console[mtype](rest);
-        }
+    ['log', 'warn', 'info', 'error'].forEach((function(_this) {
+      return function(mtype) {
+        return _this[mtype] = function() {
+          var rest;
+          rest = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+          _this.list.addItem({
+            message: rest
+          }, {
+            type: mtype
+          });
+          if (_this.parentIsInDom) {
+            return console[mtype](rest);
+          }
+        };
       };
-    });
+    })(this));
   }
 
   AppLogger.prototype.viewAppended = function() {
