@@ -22,6 +22,35 @@ class DropboxMainView extends KDView
     @logger = new AppLogger
     @logger.info "Logger initialized."
 
+  presentModal: (dbc)->
+    modal = new KDModalViewWithForms
+     title     : "Sudo access needed to start cron"
+     overlay   : yes
+     width     : 550
+     height    : "auto"
+     cssClass  : "new-kdmodal"
+     tabs                    :
+       navigable             : yes
+       callback              : (form)-> 
+         dbc.installHelper form.password
+         modal.destroy()
+       forms                 :
+         "Sudo Password"     :
+           buttons           :
+             Next            :
+               title         : "Submit"
+               style         : "modal-clean-green"
+               type          : "submit"
+           fields            :
+             password        :
+               type          : "password"
+               placeholder   : "sudo password..."
+               validate      :
+                 rules       :
+                   required  : yes
+                 messages    :
+                   required  : "password is required!"
+  
   viewAppended:->
 
     dbc = KD.singletons.dropboxController
@@ -138,6 +167,7 @@ class DropboxMainView extends KDView
         @logger.info message, "| State:", dbc._lastState
 
       @toggle.hideLoader()
+      @uninstallButton.hide()
 
       return  if busy
 
@@ -146,20 +176,23 @@ class DropboxMainView extends KDView
 
       if dbc._lastState in [RUNNING, WAITING_FOR_REGISTER]
         @toggle.setState "Stop Dropbox"
-        @uninstallButton.hide()
       else
         @toggle.setState "Start Dropbox"
-        @uninstallButton.show()
+        
+        if !@toggle.hasClass "hidden"
+          @uninstallButton.show()
 
       if dbc._lastState is NOT_INSTALLED
         @installButton.show()
-        @uninstallButton.hide()
         @toggle.hide()
       else
         @installButton.hide()
+      
         if dbc._lastState is HELPER_FAILED
-        then @loader.show()
-        else @toggle.show();
+          @loader.show()
+          @presentModal dbc
+        else 
+          @toggle.show()
 
       @finder[if dbc._lastState is RUNNING then "show" else "hide"]()
 

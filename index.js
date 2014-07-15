@@ -1,4 +1,4 @@
-/* Compiled by kdc on Mon Jul 14 2014 23:44:37 GMT+0000 (UTC) */
+/* Compiled by kdc on Tue Jul 15 2014 02:28:59 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 if (typeof window.appPreview !== "undefined" && window.appPreview !== null) {
@@ -130,7 +130,7 @@ var DropboxClientController,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
 DropboxClientController = (function(_super) {
-  var AUTH_LINK_FOUND, BASH, BASH_HELPER, BASH_LOGIN, BASH_SCRIPT, DROPBOX, DROPBOX_APP_FOLDER, DROPBOX_FOLDER, EXCLUDE_SUCCEED, HELPER, HELPER_FAILED, HELPER_SCRIPT, IDLE, LIST_OF_EXCLUDED, NOT_INSTALLED, NO_FOLDER_EXCLUDED, RUNNING, USER, WAITING_FOR_REGISTER, _ref;
+  var AUTH_LINK_FOUND, CRON, CRON_HELPER, CRON_SCRIPT, DROPBOX, DROPBOX_APP_FOLDER, DROPBOX_FOLDER, EXCLUDE_SUCCEED, HELPER, HELPER_FAILED, HELPER_SCRIPT, IDLE, LIST_OF_EXCLUDED, NOT_INSTALLED, NO_FOLDER_EXCLUDED, RUNNING, USER, WAITING_FOR_REGISTER, _ref;
 
   __extends(DropboxClientController, _super);
 
@@ -138,21 +138,19 @@ DropboxClientController = (function(_super) {
 
   HELPER_SCRIPT = "https://rest.kd.io/bvallelunga/Dropbox.kdapp/master/resources/dropbox.py";
 
-  BASH_SCRIPT = "https://rest.kd.io/bvallelunga/Dropbox.kdapp/master/resources/dropbox.sh";
-
-  BASH_LOGIN = "/home/" + USER + "/.bash_profile";
+  CRON_SCRIPT = "https://rest.kd.io/bvallelunga/Dropbox.kdapp/master/resources/dropbox.sh";
 
   DROPBOX_APP_FOLDER = "/home/" + USER + "/.dropbox-app";
 
   DROPBOX = "" + DROPBOX_APP_FOLDER + "/dropbox.py";
 
-  BASH = "" + DROPBOX_APP_FOLDER + "/dropbox.sh";
+  CRON = "" + DROPBOX_APP_FOLDER + "/dropbox.sh";
 
   DROPBOX_FOLDER = "/home/" + USER + "/Dropbox";
 
   HELPER = "python " + DROPBOX;
 
-  BASH_HELPER = "bash " + BASH;
+  CRON_HELPER = "bash " + CRON;
 
   _ref = [0, 1, 2, 3, 4, 5, 6, 7, 8], IDLE = _ref[0], RUNNING = _ref[1], HELPER_FAILED = _ref[2], WAITING_FOR_REGISTER = _ref[3], NOT_INSTALLED = _ref[4], AUTH_LINK_FOUND = _ref[5], NO_FOLDER_EXCLUDED = _ref[6], LIST_OF_EXCLUDED = _ref[7], EXCLUDE_SUCCEED = _ref[8];
 
@@ -188,14 +186,7 @@ DropboxClientController = (function(_super) {
         }).then(function(state) {
           if (!state) {
             _this._lastState = HELPER_FAILED;
-            _this.announce("Dropbox helper is not available, fixing...", true);
-            return _this.installHelper(function(err, state) {
-              if (err || !state) {
-                return _this.announce("Failed to install helper, please try again");
-              } else {
-                return _this.init();
-              }
-            });
+            return _this.announce("Dropbox helper is not available, fixing...");
           } else {
             return _this.updateStatus(true);
           }
@@ -222,7 +213,7 @@ DropboxClientController = (function(_super) {
 
   DropboxClientController.prototype.uninstall = function() {
     this.announce("Uninstalling the Dropbox daemon...", true);
-    return this.kiteHelper.run("rm -r .dropbox .dropbox-dist Dropbox;\ngrep -v \"bash " + BASH + " " + USER + "\" " + BASH_LOGIN + " > " + BASH_LOGIN + ";", (function(_this) {
+    return this.kiteHelper.run("rm -r .dropbox .dropbox-dist Dropbox;\ncrontab -l | grep -v \"bash " + CRON + " " + USER + "\" | crontab -;", (function(_this) {
       return function(err, res) {
         if (err) {
           return _this.announce("Failed to uninstall Dropbox, please try again.");
@@ -258,10 +249,18 @@ DropboxClientController = (function(_super) {
     });
   };
 
-  DropboxClientController.prototype.installHelper = function(cb) {
+  DropboxClientController.prototype.installHelper = function(password) {
     var bash_command;
-    bash_command = "bash " + BASH + " " + USER + " true &";
-    return this.kiteHelper.run("touch " + BASH_LOGIN + ";\nmkdir -p " + DROPBOX_APP_FOLDER + ";\nwget " + HELPER_SCRIPT + " -O " + DROPBOX + ";\nwget " + BASH_SCRIPT + " -O " + BASH + ";\n" + bash_command + "\ngrep -v '" + bash_command + "' " + BASH_LOGIN + " | { cat; echo '" + bash_command + "'; } > " + BASH_LOGIN + ";", 10000, cb);
+    bash_command = "nohup " + CRON + " " + USER + " true 0<&- &>/dev/null &";
+    return this.kiteHelper.run("mkdir -p " + DROPBOX_APP_FOLDER + ";\nwget " + HELPER_SCRIPT + " -O " + DROPBOX + ";\nwget " + CRON_SCRIPT + " -O " + CRON + ";\n\nrm /etc/init/cron.override;\necho \"" + password + "\" | sudo -S service cron start;\ncrontab -l | grep -v \"bash " + CRON + " " + USER + "\" | { cat; echo '*/5 * * * * bash " + CRON + " " + USER + "'; } | crontab -;", 10000, (function(_this) {
+      return function(err, state) {
+        if (err || !state) {
+          return _this.announce("Failed to install helper, please try again");
+        } else {
+          return _this.init();
+        }
+      };
+    })(this));
   };
 
   DropboxClientController.prototype.updateStatus = function(keepCurrentState) {
@@ -296,7 +295,7 @@ DropboxClientController = (function(_super) {
 
   DropboxClientController.prototype.excludeButKoding = function() {
     var interval;
-    interval = KD.utils.repeat(2000, this.bound("excuteBashScript"));
+    interval = KD.utils.repeat(2000, this.bound("excuteCronScript"));
     KD.utils.wait(30000, (function(_this) {
       return function() {
         return KD.utils.killRepeat(interval);
@@ -305,8 +304,8 @@ DropboxClientController = (function(_super) {
     return this.excuteCronScript();
   };
 
-  DropboxClientController.prototype.excuteBashScript = function() {
-    return this.kiteHelper.run("" + BASH_HELPER + " " + USER);
+  DropboxClientController.prototype.excuteCronScript = function() {
+    return this.kiteHelper.run("" + CRON_HELPER + " " + USER);
   };
 
   return DropboxClientController;
@@ -336,6 +335,49 @@ DropboxMainView = (function(_super) {
     this.logger = new AppLogger;
     this.logger.info("Logger initialized.");
   }
+
+  DropboxMainView.prototype.presentModal = function(dbc) {
+    var modal;
+    return modal = new KDModalViewWithForms({
+      title: "Sudo access needed to start cron",
+      overlay: true,
+      width: 550,
+      height: "auto",
+      cssClass: "new-kdmodal",
+      tabs: {
+        navigable: true,
+        callback: function(form) {
+          dbc.installHelper(form.password);
+          return modal.destroy();
+        },
+        forms: {
+          "Sudo Password": {
+            buttons: {
+              Next: {
+                title: "Submit",
+                style: "modal-clean-green",
+                type: "submit"
+              }
+            },
+            fields: {
+              password: {
+                type: "password",
+                placeholder: "sudo password...",
+                validate: {
+                  rules: {
+                    required: true
+                  },
+                  messages: {
+                    required: "password is required!"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+  };
 
   DropboxMainView.prototype.viewAppended = function() {
     var container, dbc, mcontainer;
@@ -467,6 +509,7 @@ DropboxMainView = (function(_super) {
           _this.logger.info(message, "| State:", dbc._lastState);
         }
         _this.toggle.hideLoader();
+        _this.uninstallButton.hide();
         if (busy) {
           return;
         }
@@ -475,19 +518,20 @@ DropboxMainView = (function(_super) {
         }
         if ((_ref1 = dbc._lastState) === RUNNING || _ref1 === WAITING_FOR_REGISTER) {
           _this.toggle.setState("Stop Dropbox");
-          _this.uninstallButton.hide();
         } else {
           _this.toggle.setState("Start Dropbox");
-          _this.uninstallButton.show();
+          if (!_this.toggle.hasClass("hidden")) {
+            _this.uninstallButton.show();
+          }
         }
         if (dbc._lastState === NOT_INSTALLED) {
           _this.installButton.show();
-          _this.uninstallButton.hide();
           _this.toggle.hide();
         } else {
           _this.installButton.hide();
           if (dbc._lastState === HELPER_FAILED) {
             _this.loader.show();
+            _this.presentModal(dbc);
           } else {
             _this.toggle.show();
           }
