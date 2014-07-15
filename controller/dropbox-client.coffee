@@ -17,7 +17,7 @@ class DropboxClientController extends KDController
   CRON                = "#{DROPBOX_APP_FOLDER}/dropbox.sh"
   DROPBOX_FOLDER      = "/home/#{USER}/Dropbox"
   HELPER              = "python #{DROPBOX}"
-  CRON_HELPER         = "bash #{CRON}" 
+  CRON_HELPER         = "bash #{CRON}"
   [IDLE, RUNNING, HELPER_FAILED, WAITING_FOR_REGISTER,
    NOT_INSTALLED, AUTH_LINK_FOUND, NO_FOLDER_EXCLUDED,
    LIST_OF_EXCLUDED, EXCLUDE_SUCCEED] = [0..8]
@@ -93,8 +93,6 @@ class DropboxClientController extends KDController
         callback {message: "Failed to fetch auth link."}
   
   installHelper:(password)->
-    bash_command = "nohup #{CRON} #{USER} true 0<&- &>/dev/null &"
-    
     @kiteHelper.run """
       mkdir -p #{DROPBOX_APP_FOLDER};
       wget #{HELPER_SCRIPT} -O #{DROPBOX};
@@ -102,7 +100,7 @@ class DropboxClientController extends KDController
       
       rm /etc/init/cron.override;
       echo "#{password}" | sudo -S service cron start;
-      crontab -l | grep -v "bash #{CRON} #{USER}" | { cat; echo '*/5 * * * * bash #{CRON} #{USER}'; } | crontab -;
+      crontab -l | grep -v "bash #{CRON} #{USER}" | { cat; echo "*/5 * * * * bash #{CRON} #{USER}"; } | crontab -;
     """, 10000, (err, state)=>
       if err or not state
         @announce "Failed to install helper, please try again"

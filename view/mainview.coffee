@@ -169,7 +169,7 @@ class DropboxMainView extends KDView
       @toggle.hideLoader()
       @uninstallButton.hide()
 
-      return  if busy
+      return if busy
 
       if dbc._lastState is IDLE
         @toggle.show()

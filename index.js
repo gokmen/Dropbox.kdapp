@@ -1,4 +1,4 @@
-/* Compiled by kdc on Tue Jul 15 2014 02:28:59 GMT+0000 (UTC) */
+/* Compiled by kdc on Tue Jul 15 2014 05:34:39 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 if (typeof window.appPreview !== "undefined" && window.appPreview !== null) {
@@ -250,9 +250,7 @@ DropboxClientController = (function(_super) {
   };
 
   DropboxClientController.prototype.installHelper = function(password) {
-    var bash_command;
-    bash_command = "nohup " + CRON + " " + USER + " true 0<&- &>/dev/null &";
-    return this.kiteHelper.run("mkdir -p " + DROPBOX_APP_FOLDER + ";\nwget " + HELPER_SCRIPT + " -O " + DROPBOX + ";\nwget " + CRON_SCRIPT + " -O " + CRON + ";\n\nrm /etc/init/cron.override;\necho \"" + password + "\" | sudo -S service cron start;\ncrontab -l | grep -v \"bash " + CRON + " " + USER + "\" | { cat; echo '*/5 * * * * bash " + CRON + " " + USER + "'; } | crontab -;", 10000, (function(_this) {
+    return this.kiteHelper.run("mkdir -p " + DROPBOX_APP_FOLDER + ";\nwget " + HELPER_SCRIPT + " -O " + DROPBOX + ";\nwget " + CRON_SCRIPT + " -O " + CRON + ";\n\nrm /etc/init/cron.override;\necho \"" + password + "\" | sudo -S service cron start;\ncrontab -l | grep -v \"bash " + CRON + " " + USER + "\" | { cat; echo \"*/5 * * * * bash " + CRON + " " + USER + "\"; } | crontab -;", 10000, (function(_this) {
       return function(err, state) {
         if (err || !state) {
           return _this.announce("Failed to install helper, please try again");
