@@ -1,9 +1,6 @@
-/* Compiled by kdc on Tue Jul 15 2014 05:34:39 GMT+0000 (UTC) */
+/* Compiled by kdc on Thu Jul 17 2014 23:52:36 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
-if (typeof window.appPreview !== "undefined" && window.appPreview !== null) {
-  var appView = window.appPreview
-}
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
 var KiteHelper,
   __hasProp = {}.hasOwnProperty,
@@ -337,7 +334,7 @@ DropboxMainView = (function(_super) {
   DropboxMainView.prototype.presentModal = function(dbc) {
     var modal;
     return modal = new KDModalViewWithForms({
-      title: "Sudo access needed to start cron",
+      title: "Please enter your Koding password",
       overlay: true,
       width: 550,
       height: "auto",
@@ -465,7 +462,7 @@ DropboxMainView = (function(_super) {
     }));
     container.addSubView(mcontainer = new KDView({
       cssClass: "description",
-      partial: "<p>\n  The Koding Dropbox app installs and manages <a target=\"_blank\" href=\"//dropbox.com\">Dropbox</a> straight from your\n  vm. This app will <strong>only</strong> synchronize the <code>~/Dropbox/Koding</code> folder.\n</p>\n<p>\n  <div>Things to Note:</div>\n  <ul>\n    <li>A Dropbox folder will be created in the <code>/home/" + (KD.nick()) + "</code> directory</li>\n    <li>This app only controls Dropbox, closing/removing the Dropbox app will not close/remove the Dropbox service</li>\n    <li>Git works with Dropbox</li>\n  </ul>\n</p>"
+      partial: "<p>\n  Dropbox is a home for all your photos, docs, videos, and files. \n  Anything you add to Dropbox will automatically show up on all your computers, phones and even the \n  Dropbox website — so you can access your stuff from anywhere.\n</p>\n<p>\n  The Koding Dropbox app installs and manages <a target=\"_blank\" href=\"//dropbox.com\">Dropbox</a> straight from your\n  vm. This app will <strong>only</strong> synchronize the <code>~/Dropbox/Koding</code> folder.\n</p>\n<p>\n  <div>Things to Note:</div>\n  <ul>\n    <li>A Dropbox folder will be created in the <code>/home/" + (KD.nick()) + "</code> directory</li>\n    <li>This app only controls Dropbox, closing/removing the Dropbox app will not close/remove the Dropbox service</li>\n    <li>Git works with Dropbox</li>\n  </ul>\n</p>"
     }));
     this.finderController = new NFinderController;
     this.finderController.on("FileNeedsToBeOpened", (function(_this) {

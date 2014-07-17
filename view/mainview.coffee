@@ -24,7 +24,7 @@ class DropboxMainView extends KDView
 
   presentModal: (dbc)->
     modal = new KDModalViewWithForms
-     title     : "Sudo access needed to start cron"
+     title     : "Please enter your Koding password"
      overlay   : yes
      width     : 550
      height    : "auto"
@@ -119,6 +119,11 @@ class DropboxMainView extends KDView
     container.addSubView mcontainer = new KDView
       cssClass : "description"
       partial  : """
+        <p>
+          Dropbox is a home for all your photos, docs, videos, and files. 
+          Anything you add to Dropbox will automatically show up on all your computers, phones and even the 
+          Dropbox website — so you can access your stuff from anywhere.
+        </p>
         <p>
           The Koding Dropbox app installs and manages <a target="_blank" href="//dropbox.com">Dropbox</a> straight from your
           vm. This app will <strong>only</strong> synchronize the <code>~/Dropbox/Koding</code> folder.
