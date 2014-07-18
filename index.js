@@ -1,6 +1,9 @@
-/* Compiled by kdc on Thu Jul 17 2014 23:52:36 GMT+0000 (UTC) */
+/* Compiled by kdc on Fri Jul 18 2014 00:44:18 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
+if (typeof window.appPreview !== "undefined" && window.appPreview !== null) {
+  var appView = window.appPreview
+}
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
 var KiteHelper,
   __hasProp = {}.hasOwnProperty,
@@ -201,7 +204,8 @@ DropboxClientController = (function(_super) {
         } else {
           return KD.utils.wait(2000, function() {
             _this._lastState = IDLE;
-            return _this.announce("Dropbox installed successfully, you can start the daemon now");
+            _this.announce("Dropbox installed successfully, you can start the daemon now");
+            return _this.addReadMe();
           });
         }
       };
@@ -274,7 +278,7 @@ DropboxClientController = (function(_super) {
         var message;
         message = "Failed to fetch state.";
         if (!err) {
-          message = res.stdout;
+          message = res.stdout.replace(/^\s+|\s+$/g, '');
           _this._previousLastState = _this._lastState;
           _this._lastState = res.exitStatus;
         }
@@ -286,6 +290,10 @@ DropboxClientController = (function(_super) {
 
   DropboxClientController.prototype.createDropboxDirectory = function(cb) {
     return this.kiteHelper.run("mkdir -p " + DROPBOX_FOLDER + ";\nmkdir -p " + DROPBOX_FOLDER + "/Koding;", cb);
+  };
+
+  DropboxClientController.prototype.addReadMe = function() {
+    return this.kiteHelper.run("echo \"Congrats on installing the Dropbox app on Koding.com! Your files in the Koding folder have already started syncing and will be there soon.\" > " + DROPBOX_FOLDER + "/Koding/README.md");
   };
 
   DropboxClientController.prototype.excludeButKoding = function() {
@@ -327,6 +335,7 @@ DropboxMainView = (function(_super) {
     options.cssClass = 'dropbox';
     DropboxMainView.__super__.constructor.call(this, options, data);
     new DropboxClientController;
+    this.interval;
     this.logger = new AppLogger;
     this.logger.info("Logger initialized.");
   }
@@ -494,9 +503,20 @@ DropboxMainView = (function(_super) {
     };
     dbc.on("status-update", (function(_this) {
       return function(message, busy) {
-        var _ref1;
-        _this.loader[busy ? "show" : "hide"]();
-        _this.reloadButton[busy ? "hide" : "show"]();
+        var spinner, _ref1;
+        if (dbc._lastState === RUNNING && message !== "Up to date") {
+          spinner = true;
+          if (!_this.interval) {
+            _this.interval = KD.utils.repeat(5000, dbc.bound("updateStatus"));
+          }
+        } else {
+          spinner = busy;
+          if (_this.interval) {
+            KD.utils.killRepeat(_this.interval);
+          }
+        }
+        _this.loader[spinner ? "show" : "hide"]();
+        _this.reloadButton[spinner ? "hide" : "show"]();
         if (message) {
           _this.message.updatePartial(message);
         }

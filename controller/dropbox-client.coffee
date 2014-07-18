@@ -59,6 +59,7 @@ class DropboxClientController extends KDController
         KD.utils.wait 2000, =>
           @_lastState = IDLE
           @announce "Dropbox installed successfully, you can start the daemon now"
+          @addReadMe()
 
   uninstall:->
     
@@ -119,10 +120,10 @@ class DropboxClientController extends KDController
       message = "Failed to fetch state."
 
       unless err
-        message = res.stdout
+        message = res.stdout.replace /^\s+|\s+$/g,''
         @_previousLastState = @_lastState
         @_lastState = res.exitStatus
-
+      
       @announce message
       @_locked = no
 
@@ -132,6 +133,11 @@ class DropboxClientController extends KDController
       mkdir -p #{DROPBOX_FOLDER};
       mkdir -p #{DROPBOX_FOLDER}/Koding;
     """, cb
+    
+  addReadMe:->
+    @kiteHelper.run """
+      echo "Congrats on installing the Dropbox app on Koding.com! Your files in the Koding folder have already started syncing and will be there soon." > #{DROPBOX_FOLDER}/Koding/README.md
+    """
     
   excludeButKoding:->
     # This method will immediately start to exclude

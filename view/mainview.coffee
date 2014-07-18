@@ -19,6 +19,7 @@ class DropboxMainView extends KDView
     super options, data
 
     new DropboxClientController
+    @interval
     @logger = new AppLogger
     @logger.info "Logger initialized."
 
@@ -162,9 +163,17 @@ class DropboxMainView extends KDView
       @setClass 'hidden'
 
     dbc.on "status-update", (message, busy)=>
-   
-      @loader[if busy then "show" else "hide"]()
-      @reloadButton[if busy then "hide" else "show"]()
+      if dbc._lastState is RUNNING and message != "Up to date"
+        spinner = true
+        
+        unless @interval
+          @interval = KD.utils.repeat 5000, dbc.bound "updateStatus"
+      else
+        spinner = busy
+        KD.utils.killRepeat @interval if @interval
+    
+      @loader[if spinner then "show" else "hide"]()
+      @reloadButton[if spinner then "hide" else "show"]()
 
       @message.updatePartial message  if message
 
@@ -173,9 +182,9 @@ class DropboxMainView extends KDView
 
       @toggle.hideLoader()
       @uninstallButton.hide()
-
+      
       return if busy
-
+      
       if dbc._lastState is IDLE
         @toggle.show()
 
