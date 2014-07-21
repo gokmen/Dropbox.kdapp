@@ -135,8 +135,13 @@ class DropboxClientController extends KDController
     """, cb
     
   addReadMe:->
+    message = """
+    Congrats on installing the Dropbox app on Koding.com!
+    Your files in the Koding folder have already started syncing and will be there soon.
+    """
+    
     @kiteHelper.run """
-      echo "Congrats on installing the Dropbox app on Koding.com! Your files in the Koding folder have already started syncing and will be there soon." > #{DROPBOX_FOLDER}/Koding/README.md
+      echo "#{message}" > #{DROPBOX_FOLDER}/Koding/README.txt
     """
     
   excludeButKoding:->

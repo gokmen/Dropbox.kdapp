@@ -1,4 +1,4 @@
-/* Compiled by kdc on Fri Jul 18 2014 00:44:18 GMT+0000 (UTC) */
+/* Compiled by kdc on Mon Jul 21 2014 19:23:36 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 if (typeof window.appPreview !== "undefined" && window.appPreview !== null) {
@@ -293,7 +293,9 @@ DropboxClientController = (function(_super) {
   };
 
   DropboxClientController.prototype.addReadMe = function() {
-    return this.kiteHelper.run("echo \"Congrats on installing the Dropbox app on Koding.com! Your files in the Koding folder have already started syncing and will be there soon.\" > " + DROPBOX_FOLDER + "/Koding/README.md");
+    var message;
+    message = "Congrats on installing the Dropbox app on Koding.com!\nYour files in the Koding folder have already started syncing and will be there soon.";
+    return this.kiteHelper.run("echo \"" + message + "\" > " + DROPBOX_FOLDER + "/Koding/README.txt");
   };
 
   DropboxClientController.prototype.excludeButKoding = function() {
