@@ -137,7 +137,7 @@ class DropboxClientController extends KDController
   addReadMe:->
     message = """
     Congrats on installing the Dropbox app on Koding.com!
-    Your files in the Koding folder have already started syncing and will be there soon.
+     Your files in the Koding folder have already started syncing and will be there soon.
     """
     
     @kiteHelper.run """
