@@ -24,33 +24,34 @@ class DropboxMainView extends KDView
     @logger.info "Logger initialized."
 
   presentModal: (dbc)->
-    modal = new KDModalViewWithForms
-     title     : "Please enter your Koding password"
-     overlay   : yes
-     width     : 550
-     height    : "auto"
-     cssClass  : "new-kdmodal"
-     tabs                    :
-       navigable             : yes
-       callback              : (form)-> 
-         dbc.installHelper form.password
-         modal.destroy()
-       forms                 :
-         "Sudo Password"     :
-           buttons           :
-             Next            :
-               title         : "Submit"
-               style         : "modal-clean-green"
-               type          : "submit"
-           fields            :
-             password        :
-               type          : "password"
-               placeholder   : "sudo password..."
-               validate      :
-                 rules       :
-                   required  : yes
-                 messages    :
-                   required  : "password is required!"
+    unless @modal
+      @modal = new KDModalViewWithForms
+       title     : "Please enter your Koding password"
+       overlay   : yes
+       width     : 550
+       height    : "auto"
+       cssClass  : "new-kdmodal"
+       tabs                    :
+         navigable             : yes
+         callback              : (form)=> 
+           dbc.installHelper form.password
+           @modal.destroy()
+         forms                 :
+           "Sudo Password"     :
+             buttons           :
+               Next            :
+                 title         : "Submit"
+                 style         : "modal-clean-green"
+                 type          : "submit"
+             fields            :
+               password        :
+                 type          : "password"
+                 placeholder   : "sudo password..."
+                 validate      :
+                   rules       :
+                     required  : yes
+                   messages    :
+                     required  : "password is required!"
   
   viewAppended:->
 

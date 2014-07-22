@@ -1,4 +1,4 @@
-/* Compiled by kdc on Tue Jul 22 2014 00:57:57 GMT+0000 (UTC) */
+/* Compiled by kdc on Tue Jul 22 2014 19:24:07 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 if (typeof window.appPreview !== "undefined" && window.appPreview !== null) {
@@ -343,46 +343,49 @@ DropboxMainView = (function(_super) {
   }
 
   DropboxMainView.prototype.presentModal = function(dbc) {
-    var modal;
-    return modal = new KDModalViewWithForms({
-      title: "Please enter your Koding password",
-      overlay: true,
-      width: 550,
-      height: "auto",
-      cssClass: "new-kdmodal",
-      tabs: {
-        navigable: true,
-        callback: function(form) {
-          dbc.installHelper(form.password);
-          return modal.destroy();
-        },
-        forms: {
-          "Sudo Password": {
-            buttons: {
-              Next: {
-                title: "Submit",
-                style: "modal-clean-green",
-                type: "submit"
-              }
-            },
-            fields: {
-              password: {
-                type: "password",
-                placeholder: "sudo password...",
-                validate: {
-                  rules: {
-                    required: true
-                  },
-                  messages: {
-                    required: "password is required!"
+    if (!this.modal) {
+      return this.modal = new KDModalViewWithForms({
+        title: "Please enter your Koding password",
+        overlay: true,
+        width: 550,
+        height: "auto",
+        cssClass: "new-kdmodal",
+        tabs: {
+          navigable: true,
+          callback: (function(_this) {
+            return function(form) {
+              dbc.installHelper(form.password);
+              return _this.modal.destroy();
+            };
+          })(this),
+          forms: {
+            "Sudo Password": {
+              buttons: {
+                Next: {
+                  title: "Submit",
+                  style: "modal-clean-green",
+                  type: "submit"
+                }
+              },
+              fields: {
+                password: {
+                  type: "password",
+                  placeholder: "sudo password...",
+                  validate: {
+                    rules: {
+                      required: true
+                    },
+                    messages: {
+                      required: "password is required!"
+                    }
                   }
                 }
               }
             }
           }
         }
-      }
-    });
+      });
+    }
   };
 
   DropboxMainView.prototype.viewAppended = function() {
