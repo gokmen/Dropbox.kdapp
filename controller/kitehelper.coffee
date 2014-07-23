@@ -53,7 +53,7 @@ class KiteHelper extends KDController
             message: "No such kite for #{vm}"
         
         vmController.info vm, (err, vmn, info)=>
-          if @vmIsStarting and info.state is "STOPPED"
+          if not @vmIsStarting and info.state is "STOPPED"
             @vmIsStarting = true
             timeout = 10 * 60 * 1000
             kite.options.timeout = timeout
@@ -66,16 +66,26 @@ class KiteHelper extends KDController
           else
             resolve kite
 
-  run:(cmd, timeout, callback)->
-
-    unless callback
-      [timeout, callback] = [callback, timeout]
+  run:(cmd, password, timeout, callback)->
+    
+    if not callback and not timeout
+      callback = password
+      password = null
+    else unless callback
+      [timeout, callback] = [password, timeout]
+      password = null
 
     # Set it to 10 min if not given
     timeout ?= 10 * 60 * 1000
+    options = command: cmd
+    
+    if password
+      console.log password
+      options.password = password
+    
     @getKite().then (kite)->
       kite.options.timeout = timeout
-      kite.exec(command: cmd).then (result)->
+      kite.exec(options).then (result)->
         if callback
           callback null, result
       .catch (err)->

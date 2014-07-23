@@ -106,10 +106,7 @@ class DropboxClientController extends KDController
       if err or not state
         @announce "Failed to install helper, please try again"
       else
-        @kiteHelper.run """
-          echo "#{password}" | sudo -S service cron start;
-        """, 10000, (err, state)=>
-          console.log err, state
+        @kiteHelper.run "service cron start", password, 10000, (err, state)=>
           if err or not state
             @announce "Failed to install helper, please try again"
           else if state.exitStatus != 0 and state.stderr.indexOf("incorrect password attempt") != -1 

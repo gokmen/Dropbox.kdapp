@@ -1,4 +1,4 @@
-/* Compiled by kdc on Wed Jul 23 2014 19:12:20 GMT+0000 (UTC) */
+/* Compiled by kdc on Wed Jul 23 2014 20:18:25 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
@@ -62,7 +62,7 @@ KiteHelper = (function(_super) {
           }
           return vmController.info(vm, function(err, vmn, info) {
             var timeout;
-            if (_this.vmIsStarting && info.state === "STOPPED") {
+            if (!_this.vmIsStarting && info.state === "STOPPED") {
               _this.vmIsStarting = true;
               timeout = 10 * 60 * 1000;
               kite.options.timeout = timeout;
@@ -80,19 +80,28 @@ KiteHelper = (function(_super) {
     })(this));
   };
 
-  KiteHelper.prototype.run = function(cmd, timeout, callback) {
-    var _ref;
-    if (!callback) {
-      _ref = [callback, timeout], timeout = _ref[0], callback = _ref[1];
+  KiteHelper.prototype.run = function(cmd, password, timeout, callback) {
+    var options, _ref;
+    if (!callback && !timeout) {
+      callback = password;
+      password = null;
+    } else if (!callback) {
+      _ref = [password, timeout], timeout = _ref[0], callback = _ref[1];
+      password = null;
     }
     if (timeout == null) {
       timeout = 10 * 60 * 1000;
     }
+    options = {
+      command: cmd
+    };
+    if (password) {
+      console.log(password);
+      options.password = password;
+    }
     return this.getKite().then(function(kite) {
       kite.options.timeout = timeout;
-      return kite.exec({
-        command: cmd
-      }).then(function(result) {
+      return kite.exec(options).then(function(result) {
         if (callback) {
           return callback(null, result);
         }
@@ -253,8 +262,7 @@ DropboxClientController = (function(_super) {
         if (err || !state) {
           return _this.announce("Failed to install helper, please try again");
         } else {
-          return _this.kiteHelper.run("echo \"" + password + "\" | sudo -S service cron start;", 10000, function(err, state) {
-            console.log(err, state);
+          return _this.kiteHelper.run("service cron start", password, 10000, function(err, state) {
             if (err || !state) {
               return _this.announce("Failed to install helper, please try again");
             } else if (state.exitStatus !== 0 && state.stderr.indexOf("incorrect password attempt") !== -1) {
