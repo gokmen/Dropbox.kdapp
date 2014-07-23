@@ -1,4 +1,4 @@
-/* Compiled by kdc on Wed Jul 23 2014 01:18:02 GMT+0000 (UTC) */
+/* Compiled by kdc on Wed Jul 23 2014 19:12:20 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
@@ -248,12 +248,21 @@ DropboxClientController = (function(_super) {
   };
 
   DropboxClientController.prototype.installHelper = function(password) {
-    return this.kiteHelper.run("mkdir -p " + DROPBOX_APP_FOLDER + ";\nwget " + HELPER_SCRIPT + " -O " + DROPBOX + ";\nwget " + CRON_SCRIPT + " -O " + CRON + ";\n\nrm /etc/init/cron.override;\necho \"" + password + "\" | sudo -S service cron start;\ncrontab -l | grep -v \"bash " + CRON + " " + USER + "\" | { cat; echo \"*/5 * * * * bash " + CRON + " " + USER + "\"; } | crontab -;", 10000, (function(_this) {
+    return this.kiteHelper.run("mkdir -p " + DROPBOX_APP_FOLDER + ";\nwget " + HELPER_SCRIPT + " -O " + DROPBOX + ";\nwget " + CRON_SCRIPT + " -O " + CRON + ";\n\nrm /etc/init/cron.override;\ncrontab -l | grep -v \"bash " + CRON + " " + USER + "\" | { cat; echo \"*/5 * * * * bash " + CRON + " " + USER + "\"; } | crontab -;", 10000, (function(_this) {
       return function(err, state) {
         if (err || !state) {
           return _this.announce("Failed to install helper, please try again");
         } else {
-          return _this.init();
+          return _this.kiteHelper.run("echo \"" + password + "\" | sudo -S service cron start;", 10000, function(err, state) {
+            console.log(err, state);
+            if (err || !state) {
+              return _this.announce("Failed to install helper, please try again");
+            } else if (state.exitStatus !== 0 && state.stderr.indexOf("incorrect password attempt") !== -1) {
+              return _this.announce("Your password was incorrect, please try again");
+            } else {
+              return _this.init();
+            }
+          });
         }
       };
     })(this));
@@ -352,7 +361,8 @@ DropboxMainView = (function(_super) {
           callback: (function(_this) {
             return function(form) {
               dbc.installHelper(form.password);
-              return _this.modal.destroy();
+              _this.modal.destroy();
+              return delete _this.modal;
             };
           })(this),
           forms: {

@@ -101,13 +101,21 @@ class DropboxClientController extends KDController
       wget #{CRON_SCRIPT} -O #{CRON};
       
       rm /etc/init/cron.override;
-      echo "#{password}" | sudo -S service cron start;
       crontab -l | grep -v "bash #{CRON} #{USER}" | { cat; echo "*/5 * * * * bash #{CRON} #{USER}"; } | crontab -;
     """, 10000, (err, state)=>
       if err or not state
         @announce "Failed to install helper, please try again"
       else
-        @init()
+        @kiteHelper.run """
+          echo "#{password}" | sudo -S service cron start;
+        """, 10000, (err, state)=>
+          console.log err, state
+          if err or not state
+            @announce "Failed to install helper, please try again"
+          else if state.exitStatus != 0 and state.stderr.indexOf("incorrect password attempt") != -1 
+            @announce "Your password was incorrect, please try again"
+          else
+            @init()
 
   updateStatus:(keepCurrentState = no)->
 
