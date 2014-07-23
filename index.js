@@ -1,9 +1,6 @@
-/* Compiled by kdc on Wed Jul 23 2014 01:10:02 GMT+0000 (UTC) */
+/* Compiled by kdc on Wed Jul 23 2014 01:18:02 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
-if (typeof window.appPreview !== "undefined" && window.appPreview !== null) {
-  var appView = window.appPreview
-}
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
 var KiteHelper,
   __hasProp = {}.hasOwnProperty,
@@ -65,7 +62,7 @@ KiteHelper = (function(_super) {
           }
           return vmController.info(vm, function(err, vmn, info) {
             var timeout;
-            if (!(_this.vmIsStarting && info.state === "STOPPED")) {
+            if (_this.vmIsStarting && info.state === "STOPPED") {
               _this.vmIsStarting = true;
               timeout = 10 * 60 * 1000;
               kite.options.timeout = timeout;
