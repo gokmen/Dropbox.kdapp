@@ -1,9 +1,6 @@
-/* Compiled by kdc on Tue Jul 22 2014 22:24:52 GMT+0000 (UTC) */
+/* Compiled by kdc on Wed Jul 23 2014 01:08:33 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
-if (typeof window.appPreview !== "undefined" && window.appPreview !== null) {
-  var appView = window.appPreview
-}
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
 var KiteHelper,
   __hasProp = {}.hasOwnProperty,
@@ -16,7 +13,7 @@ KiteHelper = (function(_super) {
     return KiteHelper.__super__.constructor.apply(this, arguments);
   }
 
-  KiteHelper.prototype.mvIsStarting = false;
+  KiteHelper.prototype.vmIsStarting = false;
 
   KiteHelper.prototype.getReady = function() {
     return new Promise((function(_this) {
@@ -65,8 +62,8 @@ KiteHelper = (function(_super) {
           }
           return vmController.info(vm, function(err, vmn, info) {
             var timeout;
-            if (!_this.mvIsStarting && info.state === "STOPPED") {
-              _this.mvIsStarting = true;
+            if (!_this.vmIsStarting && info.state === "STOPPED") {
+              _this.vmIsStarting = true;
               timeout = 10 * 60 * 1000;
               kite.options.timeout = timeout;
               return kite.vmOn().then(function() {
@@ -136,9 +133,9 @@ DropboxClientController = (function(_super) {
 
   USER = KD.nick();
 
-  HELPER_SCRIPT = "https://rest.kd.io/bvallelunga/Dropbox.kdapp/master/resources/dropbox.py";
+  HELPER_SCRIPT = "https://rest.kd.io/gokmen/Dropbox.kdapp/master/resources/dropbox.py";
 
-  CRON_SCRIPT = "https://rest.kd.io/bvallelunga/Dropbox.kdapp/master/resources/dropbox.sh";
+  CRON_SCRIPT = "https://rest.kd.io/gokmen/Dropbox.kdapp/master/resources/dropbox.sh";
 
   DROPBOX_APP_FOLDER = "/home/" + USER + "/.dropbox-app";
 
@@ -759,9 +756,9 @@ AppLogger = (function(_super) {
       name: "Dropbox",
       routes: {
         "/:name?/Dropbox": null,
-        "/:name?/bvallelunga/Apps/Dropbox": null
+        "/:name?/gokmen/Apps/Dropbox": null
       },
-      dockPath: "/bvallelunga/Apps/Dropbox",
+      dockPath: "/gokmen/Apps/Dropbox",
       behavior: "application"
     });
   }

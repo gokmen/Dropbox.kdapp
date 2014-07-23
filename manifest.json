@@ -6,8 +6,8 @@
   "name": "Dropbox",
   "identifier": "com.koding.apps.dropbox",
   "path": "~/Applications/Dropbox.kdapp",
-  "homepage": "bvallelunga.kd.io/dropbox",
-  "repository": "git://github.com/bvallelunga/Dropbox.kdapp.git",
+  "homepage": "gokmen.kd.io/dropbox",
+  "repository": "git://github.com/gokmen/Dropbox.kdapp.git",
   "description": "Dropbox : Dropbox installer for Koding, which allows you to use Dropbox in your Koding VMs.",
   "category": "web-app",
   "source": {

@@ -981,9 +981,9 @@ Any specified path must be within Dropbox.
         for path in paths:
           # Dropbox python script cant read paths with spaces in
           # it becuase of how it parses arguments from cli.
-          # This replaces || with spaces in an effort to not modify 
+          # This replaces -- with spaces in an effort to not modify 
           # the rest of the script to fix the bug.
-          path = path.replace("||", " ")
+          path = path.replace("--", " ")
           absolute_paths.append(unicode_abspath(path.decode(sys.getfilesystemencoding())))
 
         if sub_command == u"add":

@@ -1,5 +1,6 @@
 
 # Dropbox Installer for Koding
+# 2014 - Gokmen Goksel <gokmen:koding.com>
 # 2014 - Brian Vallelunga <bvallelunga:koding.com>
 
 # This program is free software; you can redistribute it and/or modify it under
@@ -194,7 +195,7 @@ class DropboxMainView extends KDView
       else
         @toggle.setState "Start Dropbox"
         
-        if !@toggle.hasClass "hidden"
+        unless @toggle.hasClass "hidden"
           @uninstallButton.show()
 
       if dbc._lastState is NOT_INSTALLED

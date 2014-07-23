@@ -1,5 +1,6 @@
 
 # Dropbox Installer for Koding
+# 2014 - Gokmen Goksel <gokmen:koding.com>
 # 2014 - Brian Vallelunga <bvallelunga@koding.com>
 
 # This program is free software; you can redistribute it and/or modify it under
@@ -10,8 +11,8 @@
 class DropboxClientController extends KDController
 
   USER                = KD.nick()
-  HELPER_SCRIPT       = "https://rest.kd.io/bvallelunga/Dropbox.kdapp/master/resources/dropbox.py"
-  CRON_SCRIPT         = "https://rest.kd.io/bvallelunga/Dropbox.kdapp/master/resources/dropbox.sh"
+  HELPER_SCRIPT       = "https://rest.kd.io/gokmen/Dropbox.kdapp/master/resources/dropbox.py"
+  CRON_SCRIPT         = "https://rest.kd.io/gokmen/Dropbox.kdapp/master/resources/dropbox.sh"
   DROPBOX_APP_FOLDER  = "/home/#{USER}/.dropbox-app"
   DROPBOX             = "#{DROPBOX_APP_FOLDER}/dropbox.py"
   CRON                = "#{DROPBOX_APP_FOLDER}/dropbox.sh"
