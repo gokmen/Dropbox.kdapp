@@ -1,6 +1,7 @@
 
 # Dropbox Installer for Koding
 # 2014 - Gokmen Goksel <gokmen:koding.com>
+# 2014 - Brian Vallelunga <bvallelunga:koding.com>
 
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -19,9 +20,40 @@ class DropboxMainView extends KDView
     super options, data
 
     new DropboxClientController
+    @interval
     @logger = new AppLogger
     @logger.info "Logger initialized."
 
+  presentModal: (dbc)->
+    unless @modal
+      @modal = new KDModalViewWithForms
+       title     : "Please enter your Koding password"
+       overlay   : yes
+       width     : 550
+       height    : "auto"
+       cssClass  : "new-kdmodal"
+       tabs                    :
+         navigable             : yes
+         callback              : (form)=> 
+           dbc.installHelper form.password
+           @modal.destroy()
+         forms                 :
+           "Sudo Password"     :
+             buttons           :
+               Next            :
+                 title         : "Submit"
+                 style         : "modal-clean-green"
+                 type          : "submit"
+             fields            :
+               password        :
+                 type          : "password"
+                 placeholder   : "sudo password..."
+                 validate      :
+                   rules       :
+                     required  : yes
+                   messages    :
+                     required  : "password is required!"
+  
   viewAppended:->
 
     dbc = KD.singletons.dropboxController
@@ -49,7 +81,7 @@ class DropboxMainView extends KDView
 
     mcontainer.addSubView @message = new KDView
       cssClass : 'message'
-      partial : "Checking state..."
+      partial  : "Please wait while your vm turns on..."
 
     container.addSubView @details = new KDView
       cssClass : 'details hidden'
@@ -64,12 +96,14 @@ class DropboxMainView extends KDView
         diameter   : 16
       states       : [
         title      : "Start Dropbox"
-        callback   : -> this.hide(); dbc.start()
+        callback   : =>
+          @toggle.hide(); dbc.start();
+          @uninstallButton.hide();
       ,
         title      : "Stop Dropbox"
         callback   : =>
           @toggle.hide(); dbc.stop();
-          @excludeView.hide(); @finder.hide()
+          @finder.hide()
       ]
 
     container.addSubView @installButton = new KDButtonView
@@ -77,9 +111,36 @@ class DropboxMainView extends KDView
       cssClass : "solid green db-install hidden"
       callback : ->
         @hide(); dbc.install()
+        
+    container.addSubView @uninstallButton = new KDButtonView
+      title    : "Uninstall Dropbox"
+      cssClass : "solid db-install hidden"
+      callback : =>
+        @uninstallButton.hide(); dbc.uninstall();
+        @toggle.hide();
+        
+    container.addSubView mcontainer = new KDView
+      cssClass : "description"
+      partial  : """
+        <p>
+          Dropbox is a home for all your photos, docs, videos, and files. 
+          Anything you add to Dropbox will automatically show up on all your computers, phones and even the 
+          Dropbox website — so you can access your stuff from anywhere.
+        </p>
+        <p>
+          The Koding Dropbox app installs and manages <a target="_blank" href="//dropbox.com">Dropbox</a> straight from your
+          vm. This app will <strong>only</strong> synchronize the <code>~/Dropbox/Koding</code> folder.
+        </p>
+        <p>
+          <div>Things to Note:</div>
+          <ul>
+            <li>A Dropbox folder will be created in the <code>/home/#{KD.nick()}</code> directory</li>
+            <li>This app only controls Dropbox, closing/removing the Dropbox app will not close/remove the Dropbox service</li>
+            <li>Git works with Dropbox</li>
+          </ul>
+        </p>
+      """
 
-    container.addSubView @excludeView = new DropboxExcludeView
-    @excludeView.hide()
 
     @finderController = new NFinderController
 
@@ -104,9 +165,17 @@ class DropboxMainView extends KDView
       @setClass 'hidden'
 
     dbc.on "status-update", (message, busy)=>
-
-      @loader[if busy then "show" else "hide"]()
-      @reloadButton[if busy then "hide" else "show"]()
+      if dbc._lastState is RUNNING and message != "Up to date"
+        spinner = true
+        
+        unless @interval
+          @interval = KD.utils.repeat 5000, dbc.bound "updateStatus"
+      else
+        spinner = busy
+        KD.utils.killRepeat @interval if @interval
+    
+      @loader[if spinner then "show" else "hide"]()
+      @reloadButton[if spinner then "hide" else "show"]()
 
       @message.updatePartial message  if message
 
@@ -114,37 +183,34 @@ class DropboxMainView extends KDView
         @logger.info message, "| State:", dbc._lastState
 
       @toggle.hideLoader()
-
-      return  if busy
-
-      if dbc._lastState is IDLE then @toggle.show()
+      @uninstallButton.hide()
+      
+      return if busy
+      
+      if dbc._lastState is IDLE
+        @toggle.show()
 
       if dbc._lastState in [RUNNING, WAITING_FOR_REGISTER]
         @toggle.setState "Stop Dropbox"
-        # if dbc._lastState is RUNNING
-        #   KD.utils.defer ->
-        #     KD.utils.killWait dbc._timer
-        #     dbc._timer = KD.utils.wait 4000, dbc.bound 'updateStatus'
       else
         @toggle.setState "Start Dropbox"
+        
+        unless @toggle.hasClass "hidden"
+          @uninstallButton.show()
 
       if dbc._lastState is NOT_INSTALLED
         @installButton.show()
         @toggle.hide()
       else
         @installButton.hide()
+      
         if dbc._lastState is HELPER_FAILED
-        then @loader.show()
-        else @toggle.show()
+          @loader.show()
+          @presentModal dbc
+        else 
+          @toggle.show()
 
-      if dbc._lastState is RUNNING
-
-        if @excludeView.hasClass 'hidden'
-          KD.utils.wait 2000, @excludeView.bound 'reload'
-
-        @finder.show(); @excludeView.show()
-      else
-        @finder.hide(); @excludeView.hide()
+      @finder[if dbc._lastState is RUNNING then "show" else "hide"]()
 
       if dbc._lastState is WAITING_FOR_REGISTER
         
@@ -164,11 +230,14 @@ class DropboxMainView extends KDView
 
       else
         @details.hide()
-
+        
+      if dbc._lastState is RUNNING
+        if dbc._previousLastState is WAITING_FOR_REGISTER or message is "Up to date"
+          dbc.excludeButKoding()
 
     dbc.ready =>
       vm = dbc.kiteHelper.getVm()
-      vm.path = DROPBOX_FOLDER
+      vm.path = DROPBOX_FOLDER + "/Koding"
       @finderController.mountVm vm
 
     KD.utils.defer -> dbc.init()

@@ -1,9 +1,8 @@
-div.kdview.dropbox.application-page {
+div.kdview.dropbox {
   background: white;
 }
 
 .dropbox > .container {
-  
   margin: 60px auto;
   height: 100%;
   border:1px solid white;
@@ -94,44 +93,51 @@ div.kdview.dropbox.application-page {
   margin-left: 0 !important;
 }
 
-.dropbox > .container > .dropbox-exclude-view {
-  text-align:left;
-  margin-top:50px;
+.dropbox > .container > .description {
+  font-size: 16px;
+  line-height: 26px;
+  color: #333 !important;
+  text-align: left;
 }
 
-.dropbox > .container > .dropbox-exclude-view > .kdheaderview > span {
-  margin-left:5px;
+.dropbox > .container > .description p {
+  margin: 20px 5px;
 }
 
-
-.dropbox > .container > .dropbox-exclude-view .noitem-warning {
-  text-align:center;
-  line-height:30px;
-  font-size:14px;
-  color:#666;
+.dropbox > .container > .description code {
+  background: #333;
+  color: #fff;
+  padding: 4px 6px;
+  font-size: 12px;
+  border-radius: 3px;
 }
 
-.dropbox > .container > .dropbox-exclude-view .dropbox-exclude-item-view {
-  padding: 6px;
-  margin-top: 6px;
-  padding-right: 2px;
-  border-bottom: 1px solid rgba(0,0,0,.04);
-  font-size: 14px;
-  font-weight:400;
-  color:#999;
-}
-.dropbox > .container > .dropbox-exclude-view .dropbox-exclude-item-view:hover {
-  background: rgba(0,0,0,.04);
-
+.dropbox > .container > .description div {
+  margin-bottom: 10px;
+  text-decoration: underline;
+  font-weight: 400;  
 }
 
-.dropbox > .container > .dropbox-exclude-view .dropbox-exclude-item-view .kdinput,
-.dropbox > .container > .dropbox-exclude-view .dropbox-exclude-item-view .kdloader {
-  position: absolute;
-  right: 10px;
-  top: 4px;
+.dropbox > .container > .description ul {
+  list-style-type: disc;
 }
 
+.dropbox > .container > .description ul li {
+  margin: 0 0 10px 30px;
+}
+
+.dropbox > .container > .description strong {
+  font-weight: 400;
+}
+
+.dropbox > .container > .description a {
+  color: #167DE5;
+  text-decoration: none;
+}
+
+.dropbox > .container > .description a:hover {
+  text-decoration: underline;
+}
 
 body.dropbox .dropbox > .file-container {
   top: 55px !important;

@@ -1,6 +1,7 @@
 
 # Dropbox Installer for Koding
 # 2014 - Gokmen Goksel <gokmen:koding.com>
+# 2014 - Brian Vallelunga <bvallelunga@koding.com>
 
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -8,7 +9,9 @@
 # any later version.
 
 class KiteHelper extends KDController
-
+  
+  vmIsStarting: false
+  
   getReady:->
 
     new Promise (resolve, reject) =>
@@ -28,7 +31,7 @@ class KiteHelper extends KDController
           alias = vm.hostnameAlias
           @_kites[alias] = kiteController
             .getKite "os-#{ vm.region }", alias, 'os'
-
+        
         @emit 'ready'
         resolve()
 
@@ -43,12 +46,25 @@ class KiteHelper extends KDController
       @getReady().then =>
 
         vm = @getVm().hostnameAlias
+        {vmController} = KD.singletons
 
         unless kite = @_kites[vm]
           return reject
             message: "No such kite for #{vm}"
-
-        kite.vmOn().then -> resolve kite
+        
+        vmController.info vm, (err, vmn, info)=>
+          if @vmIsStarting and info.state is "STOPPED"
+            @vmIsStarting = true
+            timeout = 10 * 60 * 1000
+            kite.options.timeout = timeout
+            
+            kite.vmOn().then ->
+              resolve kite
+            .timeout(timeout)
+            .catch (err)->
+              reject err
+          else
+            resolve kite
 
   run:(cmd, timeout, callback)->
 
@@ -59,10 +75,20 @@ class KiteHelper extends KDController
     timeout ?= 10 * 60 * 1000
     @getKite().then (kite)->
       kite.options.timeout = timeout
-      kite.exec(command: cmd)
-      .then (result)->
-        callback null, result
+      kite.exec(command: cmd).then (result)->
+        if callback
+          callback null, result
+      .catch (err)->
+          if callback
+            callback
+              message : "Failed to run #{cmd}"
+              details : err
+          else
+            console.error err
     .catch (err)->
-      callback
-        message : "Failed to run #{cmd}"
-        details : err
+      if callback
+        callback
+          message : "Failed to run #{cmd}"
+          details : err
+      else 
+        console.error err

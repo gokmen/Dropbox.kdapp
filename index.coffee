@@ -1,6 +1,7 @@
 
 # Dropbox Installer for Koding
 # 2014 - Gokmen Goksel <gokmen:koding.com>
+# 2014 - Brian Vallelunga <bvallelunga@koding.com>
 
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -11,12 +12,10 @@ do ->
 
   # In live mode you can add your App view to window's appView
   if appView?
-
     view = new DropboxMainView
     appView.addSubView view
-
+  
   else
-
     KD.registerAppClass DropboxController,
       name     : "Dropbox"
       routes   :

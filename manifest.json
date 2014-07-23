@@ -20,8 +20,6 @@
           
           "./view/mainview.coffee",
           "./view/maincontroller.coffee",
-          "./view/excludeitemview.coffee",
-          "./view/excludeview.coffee",
           "./view/logger/loggeritem.coffee",
           "./view/logger/logger.coffee",
           
