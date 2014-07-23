@@ -53,7 +53,9 @@ class DropboxClientController extends KDController
   install:->
 
     @announce "Installing the Dropbox daemon...", yes
-    @kiteHelper.run "#{HELPER} install", (err, res)=>
+    @kiteHelper.run 
+      command: "#{HELPER} install"
+    , (err, res)=>
       if err
         @announce "Failed to install Dropbox, please try again."
       else
@@ -65,10 +67,12 @@ class DropboxClientController extends KDController
   uninstall:->
     
     @announce "Uninstalling the Dropbox daemon...", yes
-    @kiteHelper.run """
-      rm -r .dropbox .dropbox-dist Dropbox;
-      crontab -l | grep -v "bash #{CRON} #{USER}" | crontab -;
-    """, (err, res)=>
+    @kiteHelper.run 
+      command: """
+        rm -r .dropbox .dropbox-dist Dropbox;
+        crontab -l | grep -v "bash #{CRON} #{USER}" | crontab -;
+      """
+    , (err, res)=>
       if err
         @announce "Failed to uninstall Dropbox, please try again."
       else
@@ -79,34 +83,49 @@ class DropboxClientController extends KDController
   start:->
     
     @announce "Starting the Dropbox daemon...", yes
-    @kiteHelper.run " #{HELPER} start;", 10000, @bound 'updateStatus'
+    @kiteHelper.run 
+      command: "#{HELPER} start;"
+      timeout: 10000
+    , @bound 'updateStatus'
     
   stop:->
 
     @announce "Stoping the Dropbox daemon...", yes
-    @kiteHelper.run "#{HELPER} stop", 10000, @bound 'updateStatus'
+    @kiteHelper.run 
+      command: "#{HELPER} stop"
+      timeout: 10000
+    , @bound 'updateStatus'
 
   getAuthLink:(callback)->
     
-    @kiteHelper.run "#{HELPER} link", (err, res)->
+    @kiteHelper.run 
+      command: "#{HELPER} link"
+    , (err, res)->
       if not err and res.exitStatus is AUTH_LINK_FOUND
         callback null, res.stdout.match /https\S+/
       else
         callback {message: "Failed to fetch auth link."}
   
   installHelper:(password)->
-    @kiteHelper.run """
-      mkdir -p #{DROPBOX_APP_FOLDER};
-      wget #{HELPER_SCRIPT} -O #{DROPBOX};
-      wget #{CRON_SCRIPT} -O #{CRON};
-      
-      rm /etc/init/cron.override;
-      crontab -l | grep -v "bash #{CRON} #{USER}" | { cat; echo "*/5 * * * * bash #{CRON} #{USER}"; } | crontab -;
-    """, 10000, (err, state)=>
+    @kiteHelper.run 
+      command: """
+        mkdir -p #{DROPBOX_APP_FOLDER};
+        wget #{HELPER_SCRIPT} -O #{DROPBOX};
+        wget #{CRON_SCRIPT} -O #{CRON};
+        
+        rm /etc/init/cron.override;
+        crontab -l | grep -v "bash #{CRON} #{USER}" | { cat; echo "*/5 * * * * bash #{CRON} #{USER}"; } | crontab -;
+      """
+      timeout: 10000
+    , (err, state)=>
       if err or not state
         @announce "Failed to install helper, please try again"
       else
-        @kiteHelper.run "service cron start", password, 10000, (err, state)=>
+        @kiteHelper.run 
+          command: "service cron start"
+          password: password
+          timeout: 10000
+        , (err, state)=>
           if err or not state
             @announce "Failed to install helper, please try again"
           else if state.exitStatus != 0 and state.stderr.indexOf("incorrect password attempt") != -1 
@@ -122,7 +141,9 @@ class DropboxClientController extends KDController
     unless keepCurrentState
       @announce null, yes
 
-    @kiteHelper.run "#{HELPER} status", (err, res)=>
+    @kiteHelper.run 
+      command: "#{HELPER} status"
+    , (err, res)=>
       message = "Failed to fetch state."
 
       unless err
@@ -135,10 +156,12 @@ class DropboxClientController extends KDController
 
   createDropboxDirectory:(cb)->
     
-    @kiteHelper.run """
-      mkdir -p #{DROPBOX_FOLDER};
-      mkdir -p #{DROPBOX_FOLDER}/Koding;
-    """, cb
+    @kiteHelper.run 
+      command: """
+        mkdir -p #{DROPBOX_FOLDER};
+        mkdir -p #{DROPBOX_FOLDER}/Koding;
+      """
+    , cb
     
   addReadMe:->
     message = """
@@ -146,9 +169,10 @@ class DropboxClientController extends KDController
      Your files in the Koding folder have already started syncing and will be there soon.
     """
     
-    @kiteHelper.run """
-      echo "#{message}" > #{DROPBOX_FOLDER}/Koding/README.txt
-    """
+    @kiteHelper.run 
+      command: """
+        echo "#{message}" > #{DROPBOX_FOLDER}/Koding/README.txt
+      """
     
   excludeButKoding:->
     # This method will immediately start to exclude
@@ -162,5 +186,6 @@ class DropboxClientController extends KDController
     @excuteCronScript()
   
   excuteCronScript:->
-    @kiteHelper.run "#{CRON_HELPER} #{USER}"
+    @kiteHelper.run 
+      command: "#{CRON_HELPER} #{USER}"
   

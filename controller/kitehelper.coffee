@@ -66,39 +66,27 @@ class KiteHelper extends KDController
           else
             resolve kite
 
-  run:(cmd, password, timeout, callback)->
+  run:(options, callback)->
     
-    if not callback and not timeout
-      callback = password
-      password = null
-    else unless callback
-      [timeout, callback] = [password, timeout]
-      password = null
-
     # Set it to 10 min if not given
-    timeout ?= 10 * 60 * 1000
-    options = command: cmd
-    
-    if password
-      console.log password
-      options.password = password
+    options.timeout ?= 10 * 60 * 1000
     
     @getKite().then (kite)->
-      kite.options.timeout = timeout
+      kite.options.timeout = options.timeout
       kite.exec(options).then (result)->
         if callback
           callback null, result
       .catch (err)->
           if callback
             callback
-              message : "Failed to run #{cmd}"
+              message : "Failed to run #{options.command}"
               details : err
           else
             console.error err
     .catch (err)->
       if callback
         callback
-          message : "Failed to run #{cmd}"
+          message : "Failed to run #{options.command}"
           details : err
       else 
         console.error err
