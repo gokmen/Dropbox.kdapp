@@ -53,7 +53,7 @@ class KiteHelper extends KDController
             message: "No such kite for #{vm}"
         
         vmController.info vm, (err, vmn, info)=>
-          if !@vmIsStarting and info.state is "STOPPED"
+          unless @vmIsStarting and info.state is "STOPPED"
             @vmIsStarting = true
             timeout = 10 * 60 * 1000
             kite.options.timeout = timeout
