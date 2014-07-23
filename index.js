@@ -1,4 +1,4 @@
-/* Compiled by kdc on Wed Jul 23 2014 01:18:02 GMT+0000 (UTC) */
+/* Compiled by kdc on Wed Jul 23 2014 20:34:23 GMT+0000 (UTC) */
 (function() {
 /* KDAPP STARTS */
 /* BLOCK STARTS: /home/bvallelunga/Applications/Dropbox.kdapp/controller/kitehelper.coffee */
@@ -62,7 +62,7 @@ KiteHelper = (function(_super) {
           }
           return vmController.info(vm, function(err, vmn, info) {
             var timeout;
-            if (_this.vmIsStarting && info.state === "STOPPED") {
+            if (!_this.vmIsStarting && info.state === "STOPPED") {
               _this.vmIsStarting = true;
               timeout = 10 * 60 * 1000;
               kite.options.timeout = timeout;
@@ -80,26 +80,20 @@ KiteHelper = (function(_super) {
     })(this));
   };
 
-  KiteHelper.prototype.run = function(cmd, timeout, callback) {
-    var _ref;
-    if (!callback) {
-      _ref = [callback, timeout], timeout = _ref[0], callback = _ref[1];
-    }
-    if (timeout == null) {
-      timeout = 10 * 60 * 1000;
+  KiteHelper.prototype.run = function(options, callback) {
+    if (options.timeout == null) {
+      options.timeout = 10 * 60 * 1000;
     }
     return this.getKite().then(function(kite) {
-      kite.options.timeout = timeout;
-      return kite.exec({
-        command: cmd
-      }).then(function(result) {
+      kite.options.timeout = options.timeout;
+      return kite.exec(options).then(function(result) {
         if (callback) {
           return callback(null, result);
         }
       })["catch"](function(err) {
         if (callback) {
           return callback({
-            message: "Failed to run " + cmd,
+            message: "Failed to run " + options.command,
             details: err
           });
         } else {
@@ -109,7 +103,7 @@ KiteHelper = (function(_super) {
     })["catch"](function(err) {
       if (callback) {
         return callback({
-          message: "Failed to run " + cmd,
+          message: "Failed to run " + options.command,
           details: err
         });
       } else {
@@ -194,7 +188,9 @@ DropboxClientController = (function(_super) {
 
   DropboxClientController.prototype.install = function() {
     this.announce("Installing the Dropbox daemon...", true);
-    return this.kiteHelper.run("" + HELPER + " install", (function(_this) {
+    return this.kiteHelper.run({
+      command: "" + HELPER + " install"
+    }, (function(_this) {
       return function(err, res) {
         if (err) {
           return _this.announce("Failed to install Dropbox, please try again.");
@@ -211,7 +207,9 @@ DropboxClientController = (function(_super) {
 
   DropboxClientController.prototype.uninstall = function() {
     this.announce("Uninstalling the Dropbox daemon...", true);
-    return this.kiteHelper.run("rm -r .dropbox .dropbox-dist Dropbox;\ncrontab -l | grep -v \"bash " + CRON + " " + USER + "\" | crontab -;", (function(_this) {
+    return this.kiteHelper.run({
+      command: "rm -r .dropbox .dropbox-dist Dropbox;\ncrontab -l | grep -v \"bash " + CRON + " " + USER + "\" | crontab -;"
+    }, (function(_this) {
       return function(err, res) {
         if (err) {
           return _this.announce("Failed to uninstall Dropbox, please try again.");
@@ -227,16 +225,24 @@ DropboxClientController = (function(_super) {
 
   DropboxClientController.prototype.start = function() {
     this.announce("Starting the Dropbox daemon...", true);
-    return this.kiteHelper.run(" " + HELPER + " start;", 10000, this.bound('updateStatus'));
+    return this.kiteHelper.run({
+      command: "" + HELPER + " start;",
+      timeout: 10000
+    }, this.bound('updateStatus'));
   };
 
   DropboxClientController.prototype.stop = function() {
     this.announce("Stoping the Dropbox daemon...", true);
-    return this.kiteHelper.run("" + HELPER + " stop", 10000, this.bound('updateStatus'));
+    return this.kiteHelper.run({
+      command: "" + HELPER + " stop",
+      timeout: 10000
+    }, this.bound('updateStatus'));
   };
 
   DropboxClientController.prototype.getAuthLink = function(callback) {
-    return this.kiteHelper.run("" + HELPER + " link", function(err, res) {
+    return this.kiteHelper.run({
+      command: "" + HELPER + " link"
+    }, function(err, res) {
       if (!err && res.exitStatus === AUTH_LINK_FOUND) {
         return callback(null, res.stdout.match(/https\S+/));
       } else {
@@ -248,12 +254,27 @@ DropboxClientController = (function(_super) {
   };
 
   DropboxClientController.prototype.installHelper = function(password) {
-    return this.kiteHelper.run("mkdir -p " + DROPBOX_APP_FOLDER + ";\nwget " + HELPER_SCRIPT + " -O " + DROPBOX + ";\nwget " + CRON_SCRIPT + " -O " + CRON + ";\n\nrm /etc/init/cron.override;\necho \"" + password + "\" | sudo -S service cron start;\ncrontab -l | grep -v \"bash " + CRON + " " + USER + "\" | { cat; echo \"*/5 * * * * bash " + CRON + " " + USER + "\"; } | crontab -;", 10000, (function(_this) {
+    return this.kiteHelper.run({
+      command: "mkdir -p " + DROPBOX_APP_FOLDER + ";\nwget " + HELPER_SCRIPT + " -O " + DROPBOX + ";\nwget " + CRON_SCRIPT + " -O " + CRON + ";\n\nrm /etc/init/cron.override;\ncrontab -l | grep -v \"bash " + CRON + " " + USER + "\" | { cat; echo \"*/5 * * * * bash " + CRON + " " + USER + "\"; } | crontab -;",
+      timeout: 10000
+    }, (function(_this) {
       return function(err, state) {
         if (err || !state) {
           return _this.announce("Failed to install helper, please try again");
         } else {
-          return _this.init();
+          return _this.kiteHelper.run({
+            command: "service cron start",
+            password: password,
+            timeout: 10000
+          }, function(err, state) {
+            if (err || !state) {
+              return _this.announce("Failed to install helper, please try again");
+            } else if (state.exitStatus !== 0 && state.stderr.indexOf("incorrect password attempt") !== -1) {
+              return _this.announce("Your password was incorrect, please try again");
+            } else {
+              return _this.init();
+            }
+          });
         }
       };
     })(this));
@@ -270,7 +291,9 @@ DropboxClientController = (function(_super) {
     if (!keepCurrentState) {
       this.announce(null, true);
     }
-    return this.kiteHelper.run("" + HELPER + " status", (function(_this) {
+    return this.kiteHelper.run({
+      command: "" + HELPER + " status"
+    }, (function(_this) {
       return function(err, res) {
         var message;
         message = "Failed to fetch state.";
@@ -286,13 +309,17 @@ DropboxClientController = (function(_super) {
   };
 
   DropboxClientController.prototype.createDropboxDirectory = function(cb) {
-    return this.kiteHelper.run("mkdir -p " + DROPBOX_FOLDER + ";\nmkdir -p " + DROPBOX_FOLDER + "/Koding;", cb);
+    return this.kiteHelper.run({
+      command: "mkdir -p " + DROPBOX_FOLDER + ";\nmkdir -p " + DROPBOX_FOLDER + "/Koding;"
+    }, cb);
   };
 
   DropboxClientController.prototype.addReadMe = function() {
     var message;
     message = "Congrats on installing the Dropbox app on Koding.com!\n Your files in the Koding folder have already started syncing and will be there soon.";
-    return this.kiteHelper.run("echo \"" + message + "\" > " + DROPBOX_FOLDER + "/Koding/README.txt");
+    return this.kiteHelper.run({
+      command: "echo \"" + message + "\" > " + DROPBOX_FOLDER + "/Koding/README.txt"
+    });
   };
 
   DropboxClientController.prototype.excludeButKoding = function() {
@@ -307,7 +334,9 @@ DropboxClientController = (function(_super) {
   };
 
   DropboxClientController.prototype.excuteCronScript = function() {
-    return this.kiteHelper.run("" + CRON_HELPER + " " + USER);
+    return this.kiteHelper.run({
+      command: "" + CRON_HELPER + " " + USER
+    });
   };
 
   return DropboxClientController;
@@ -352,7 +381,8 @@ DropboxMainView = (function(_super) {
           callback: (function(_this) {
             return function(form) {
               dbc.installHelper(form.password);
-              return _this.modal.destroy();
+              _this.modal.destroy();
+              return delete _this.modal;
             };
           })(this),
           forms: {

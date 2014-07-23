@@ -37,6 +37,7 @@ class DropboxMainView extends KDView
          callback              : (form)=> 
            dbc.installHelper form.password
            @modal.destroy()
+           delete @modal
          forms                 :
            "Sudo Password"     :
              buttons           :
